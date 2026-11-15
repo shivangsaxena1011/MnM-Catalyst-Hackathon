@@ -4,6 +4,7 @@ import { useElderMode } from '../context/ElderModeContext';
 import { api } from '../api/client';
 import { MedicationLog, Escalation, Appointment, ActivityItem, AdherenceStats, Medication } from '../types';
 import { DoseActionModal } from '../components/DoseActionModal';
+import { parseServerDate } from '../utils/date';
 import confetti from 'canvas-confetti';
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer
@@ -463,7 +464,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate, onOpen
 
                           {isTaken && item.taken_at && (
                             <p className="text-xs text-emerald-700 font-semibold mt-1">
-                              ✓ Confirmed taken at {new Date(item.taken_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              ✓ Confirmed taken at {parseServerDate(item.taken_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </p>
                           )}
 
@@ -575,7 +576,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate, onOpen
                   <div className="font-bold text-slate-800">{act.title}</div>
                   <div className="text-slate-500 line-clamp-1">{act.details}</div>
                   <div className="text-[10px] text-slate-400 mt-0.5">
-                    {new Date(act.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {parseServerDate(act.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>
               ))}

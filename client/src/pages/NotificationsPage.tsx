@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api/client';
 import { NotificationItem } from '../types';
+import { parseServerDate } from '../utils/date';
 import {
   Bell, ShieldAlert, CheckCircle2, Clock, Mail,
   AlertTriangle, PlayCircle, CheckCheck
@@ -175,7 +176,7 @@ export const NotificationsPage: React.FC = () => {
                       <p className="text-xs text-slate-600 mt-1 leading-relaxed">{notif.message}</p>
 
                       <div className="flex items-center space-x-3 mt-2 text-[10px] text-slate-400 font-medium">
-                        <span>{new Date(notif.created_at).toLocaleString()}</span>
+                        <span>{parseServerDate(notif.created_at).toLocaleString()}</span>
                         <span>•</span>
                         <span>Email Status: {notif.email_status}</span>
                       </div>

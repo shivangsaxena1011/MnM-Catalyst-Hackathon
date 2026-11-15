@@ -2,6 +2,7 @@ import {
   User, Patient, CareCircleMember, Medication, MedicationLog,
   Appointment, Escalation, NotificationItem, ActivityItem, AdherenceStats
 } from '../types';
+export { parseServerDate } from '../utils/date';
 
 const API_BASE = '/api';
 

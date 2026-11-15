@@ -438,12 +438,31 @@ export async function checkAndSendUpcomingDoseReminders() {
   for (const med of meds) {
     const { date: todayDate, currentTimeMinutes } = getPatientDateTime(med.timezone || 'Asia/Kolkata');
 
-    const slots = (med.schedule_slots || 'morning').split(',').map(s => s.trim().toLowerCase());
+    let slots = [];
+    try {
+      slots = JSON.parse(med.schedule_slots);
+      if (!Array.isArray(slots)) slots = [slots];
+    } catch {
+      slots = [med.schedule_slots];
+    }
 
     for (const slot of slots) {
-      const scheduledTime = med.custom_time || SLOT_DEFAULT_TIMES[slot] || '08:00';
+      if (!slot) continue;
+
+      let slotTimeStr = SLOT_DEFAULT_TIMES[slot.toLowerCase()];
+      if (!slotTimeStr) {
+        if (/^\d{1,2}:\d{2}$/.test(slot)) {
+          slotTimeStr = slot.length === 4 ? `0${slot}` : slot;
+        } else if (med.custom_time && /^\d{1,2}:\d{2}$/.test(med.custom_time)) {
+          slotTimeStr = med.custom_time.length === 4 ? `0${med.custom_time}` : med.custom_time;
+        } else {
+          slotTimeStr = '09:00';
+        }
+      }
+
+      const scheduledTime = slotTimeStr;
       const [h, min] = scheduledTime.split(':').map(Number);
-      const scheduledMinutes = h * 60 + min;
+      const scheduledMinutes = h * 60 + (min || 0);
 
       // Window: 0 to 30 minutes before due time
       const diffMinutes = scheduledMinutes - currentTimeMinutes;

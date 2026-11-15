@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api/client';
 import { ActivityItem } from '../types';
+import { parseServerDate } from '../utils/date';
 import {
   Activity, CheckCircle2, AlertTriangle, Calendar,
   Users, UserPlus, Clock
@@ -90,7 +91,7 @@ export const TimelinePage: React.FC = () => {
                       <span className="text-sm font-bold text-slate-900 font-serif">{ev.title}</span>
                     </div>
                     <span className="text-[11px] text-slate-400 font-medium">
-                      {new Date(ev.created_at).toLocaleString()}
+                      {parseServerDate(ev.created_at).toLocaleString()}
                     </span>
                   </div>
 
