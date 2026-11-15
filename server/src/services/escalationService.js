@@ -13,29 +13,70 @@ import {
 
 export { SLOT_DEFAULT_TIMES };
 
+const formatterCache = new Map();
+
+/**
+ * Intl.DateTimeFormat construction is expensive and background scans call
+ * getPatientDateTime once per medication, so formatters are cached per timezone.
+ * @param {string} timezone - IANA timezone identifier
+ * @returns {{dateFmt: Intl.DateTimeFormat, timeFmt: Intl.DateTimeFormat}}
+ */
+function getFormatters(timezone) {
+  let cached = formatterCache.get(timezone);
+  if (!cached) {
+    cached = {
+      dateFmt: new Intl.DateTimeFormat('en-CA', {
+        timeZone: timezone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }),
+      timeFmt: new Intl.DateTimeFormat('en-GB', {
+        timeZone: timezone,
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      }),
+    };
+    formatterCache.set(timezone, cached);
+  }
+  return cached;
+}
+
+/**
+ * Build a composite lookup key for per-dose Maps/Sets.
+ * @param {...(string|number)} parts
+ * @returns {string}
+ */
+const doseKey = (...parts) => parts.join('|');
+
+/**
+ * Memoize care-circle member lookups for the duration of one scan so a patient
+ * with several medications triggers only one member query.
+ * @param {{all: (patientId: number) => Array<Object>}} stmt - prepared statement taking patient_id
+ * @returns {(patientId: number) => Array<Object>}
+ */
+function memoizeMembers(stmt) {
+  const cache = new Map();
+  return patientId => {
+    if (!cache.has(patientId)) cache.set(patientId, stmt.all(patientId));
+    return cache.get(patientId);
+  };
+}
+
 /**
  * Helper to compute current local date and time in the patient's configured timezone.
  * Defaults to 'Asia/Kolkata' (+05:30) for accurate Indian Standard Time calculation.
- * 
+ *
  * @param {string} [timezone='Asia/Kolkata'] - IANA timezone identifier
  * @returns {{date: string, hours: number, minutes: number, currentTimeMinutes: number, timeString: string}}
  */
 export function getPatientDateTime(timezone = 'Asia/Kolkata') {
   const now = new Date();
   try {
-    const dateStr = new Intl.DateTimeFormat('en-CA', {
-      timeZone: timezone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    }).format(now); // 'YYYY-MM-DD'
-
-    const timeParts = new Intl.DateTimeFormat('en-GB', {
-      timeZone: timezone,
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    }).formatToParts(now);
+    const { dateFmt, timeFmt } = getFormatters(timezone);
+    const dateStr = dateFmt.format(now); // 'YYYY-MM-DD'
+    const timeParts = timeFmt.formatToParts(now);
 
     const hours = Number(timeParts.find(p => p.type === 'hour')?.value || 0);
     const minutes = Number(timeParts.find(p => p.type === 'minute')?.value || 0);
@@ -70,7 +111,7 @@ let isScanning = false;
  * Scans active medications for unconfirmed doses and triggers multi-tier caregiver escalations.
  * Strictly respects taken/skipped statuses, prevents duplicate escalations, and includes
  * clinical guidance against doubling missed doses.
- * 
+ *
  * @param {number|null} [patientId=null] - Target patient ID, or null to evaluate all active patients
  * @returns {Promise<Array<{escalationId: number, medication: string, patient: string, tier: number, slot: string, scheduledTime: string}>>}
  */
@@ -99,14 +140,27 @@ export async function checkAndEscalateDoses(patientId = null) {
     const escalationsTriggered = [];
 
     // Efficiency: Hoist prepared statements out of the loops
-    const stmtGetExistingLog = db.prepare(`
-      SELECT * FROM medication_logs 
-      WHERE patient_id = ? AND medication_id = ? AND scheduled_date = ? AND scheduled_slot = ?
-    `);
-    const stmtGetExistingEscalation = db.prepare(`
-      SELECT * FROM escalations 
-      WHERE patient_id = ? AND medication_id = ? AND scheduled_time = ? AND (DATE(created_at) = ? OR DATE(notified_at) = ?)
-    `);
+    // Efficiency: load recent logs and escalations ONCE per scan instead of one query
+    // per dose slot. A 2-day window covers "today" in every patient timezone.
+    const recentLogs = new Map();
+    for (const log of db.prepare(`
+      SELECT id, patient_id, medication_id, scheduled_date, scheduled_slot, status
+      FROM medication_logs WHERE scheduled_date >= date('now', '-1 day')
+    `).all()) {
+      recentLogs.set(doseKey(log.patient_id, log.medication_id, log.scheduled_date, log.scheduled_slot), log);
+    }
+    const recentEscalations = new Set();
+    for (const esc of db.prepare(`
+      SELECT patient_id, medication_id, scheduled_time,
+             DATE(created_at) AS created_day, DATE(notified_at) AS notified_day
+      FROM escalations
+      WHERE created_at >= datetime('now', '-2 day') OR notified_at >= datetime('now', '-2 day')
+    `).all()) {
+      recentEscalations.add(doseKey(esc.patient_id, esc.medication_id, esc.scheduled_time, esc.created_day));
+      if (esc.notified_day) {
+        recentEscalations.add(doseKey(esc.patient_id, esc.medication_id, esc.scheduled_time, esc.notified_day));
+      }
+    }
     const stmtInsertUpcomingLog = db.prepare(`
       INSERT INTO medication_logs (patient_id, medication_id, scheduled_date, scheduled_slot, status, notes)
       VALUES (?, ?, ?, ?, 'upcoming', 'Unconfirmed dose - overdue check active')
@@ -115,12 +169,12 @@ export async function checkAndEscalateDoses(patientId = null) {
       INSERT INTO escalations (patient_id, medication_id, log_id, tier, status, scheduled_time, message)
       VALUES (?, ?, ?, ?, 'active', ?, ?)
     `);
-    const stmtGetCareCircleMembers = db.prepare(`
+    const getCareCircleMembers = memoizeMembers(db.prepare(`
       SELECT cc.*, u.email, u.name as user_name
       FROM care_circle cc
       JOIN users u ON cc.user_id = u.id
       WHERE cc.patient_id = ?
-    `);
+    `));
     const stmtInsertNotification = db.prepare(`
       INSERT INTO notifications (patient_id, user_id, title, message, type, priority, email_status)
       VALUES (?, ?, ?, ?, 'escalation', ?, ?)
@@ -144,7 +198,7 @@ export async function checkAndEscalateDoses(patientId = null) {
 
       for (const slot of slots) {
         // 2. Check existing log for today in patient's timezone
-        const existingLog = stmtGetExistingLog.get(med.patient_id, med.id, patientDate, slot);
+        const existingLog = recentLogs.get(doseKey(med.patient_id, med.id, patientDate, slot));
 
         // Safety check: A taken or skipped dose NEVER triggers missed-dose escalation!
         if (existingLog && (existingLog.status === 'taken' || existingLog.status === 'skipped')) {
@@ -169,14 +223,16 @@ export async function checkAndEscalateDoses(patientId = null) {
           }
 
           // 5. Anti-duplicate check: Prevent creating duplicate alerts for the same dose today
-          const existingEscalation = stmtGetExistingEscalation.get(med.patient_id, med.id, slotTimeStr, patientDate, patientDate);
+          const escalationKey = doseKey(med.patient_id, med.id, slotTimeStr, patientDate);
 
-          if (!existingEscalation) {
+          if (!recentEscalations.has(escalationKey)) {
+            recentEscalations.add(escalationKey);
             // Keep log status accurate: do NOT mark as "confirmed missed" if it is merely unconfirmed/overdue!
             let logId = existingLog ? existingLog.id : null;
             if (!existingLog) {
               const insertLog = stmtInsertUpcomingLog.run(med.patient_id, med.id, patientDate, slot);
               logId = insertLog.lastInsertRowid;
+              recentLogs.set(doseKey(med.patient_id, med.id, patientDate, slot), { id: logId, status: 'upcoming' });
             }
 
             const message = `Tier ${tier} Escalation: ${med.patient_name} has not confirmed ${med.name} (${med.dosage}) scheduled for ${slot.toUpperCase()} (${slotTimeStr}). Protocol: Never double missed dose.`;
@@ -186,13 +242,13 @@ export async function checkAndEscalateDoses(patientId = null) {
             const escalationId = escResult.lastInsertRowid;
 
             // Notify Care Circle members
-            const careCircleMembers = stmtGetCareCircleMembers.all(med.patient_id);
+            const careCircleMembers = getCareCircleMembers(med.patient_id);
             let caregiversCount = 0;
 
             for (const member of careCircleMembers) {
               if (tier === 3 || member.role === 'senior') {
                 const priority = tier === 3 ? 'critical' : (tier === 2 ? 'high' : 'medium');
-                
+
                 // Real Nodemailer dispatch
                 let emailStatus = 'not_applicable';
                 if (tier === 3 && (member.role === 'caregiver' || member.role === 'family')) {
@@ -217,11 +273,11 @@ export async function checkAndEscalateDoses(patientId = null) {
 
                 // In-app Notification
                 stmtInsertNotification.run(
-                  med.patient_id, 
-                  member.user_id, 
-                  `Dose Escalation Alert (Tier ${tier})`, 
-                  message, 
-                  priority, 
+                  med.patient_id,
+                  member.user_id,
+                  `Dose Escalation Alert (Tier ${tier})`,
+                  message,
+                  priority,
                   emailStatus
                 );
               }
@@ -261,7 +317,7 @@ export async function checkAndEscalateDoses(patientId = null) {
 /**
  * Manually triggers a simulated dose escalation for testing or judge demonstration purposes.
  * Refuses escalation if the dose was already confirmed as taken today.
- * 
+ *
  * @param {Object} params
  * @param {number} params.patientId - Patient identifier
  * @param {number} params.medicationId - Medication identifier
@@ -271,9 +327,9 @@ export async function checkAndEscalateDoses(patientId = null) {
  */
 export async function triggerManualEscalation({ patientId, medicationId, slot = 'morning', tier = 3 }) {
   const med = db.prepare(`
-    SELECT m.*, p.full_name as patient_name, p.timezone 
-    FROM medications m 
-    JOIN patients p ON m.patient_id = p.id 
+    SELECT m.*, p.full_name as patient_name, p.timezone
+    FROM medications m
+    JOIN patients p ON m.patient_id = p.id
     WHERE m.id = ? AND m.patient_id = ?
   `).get(medicationId, patientId);
 
@@ -285,7 +341,7 @@ export async function triggerManualEscalation({ patientId, medicationId, slot = 
 
   // Verify dose is not already taken
   const existingLog = db.prepare(`
-    SELECT * FROM medication_logs 
+    SELECT * FROM medication_logs
     WHERE patient_id = ? AND medication_id = ? AND scheduled_date = ? AND scheduled_slot = ?
   `).get(patientId, medicationId, patientDate, slot);
 
@@ -318,6 +374,11 @@ export async function triggerManualEscalation({ patientId, medicationId, slot = 
     WHERE cc.patient_id = ?
   `).all(patientId);
 
+  const stmtInsertNotification = db.prepare(`
+    INSERT INTO notifications (patient_id, user_id, title, message, type, priority, email_status)
+    VALUES (?, ?, ?, ?, 'escalation', 'critical', ?)
+  `);
+
   let notifiedCount = 0;
   for (const m of members) {
     let emailStatus = 'not_applicable';
@@ -341,10 +402,7 @@ export async function triggerManualEscalation({ patientId, medicationId, slot = 
       emailStatus = res.status;
     }
 
-    db.prepare(`
-      INSERT INTO notifications (patient_id, user_id, title, message, type, priority, email_status)
-      VALUES (?, ?, ?, ?, 'escalation', 'critical', ?)
-    `).run(patientId, m.user_id, `Dose Escalation Alert (Tier ${tier})`, message, emailStatus);
+    stmtInsertNotification.run(patientId, m.user_id, `Dose Escalation Alert (Tier ${tier})`, message, emailStatus);
   }
 
   db.prepare(`UPDATE escalations SET caregivers_notified = ? WHERE id = ?`).run(notifiedCount, esc.lastInsertRowid);
@@ -365,7 +423,7 @@ export async function triggerManualEscalation({ patientId, medicationId, slot = 
  * Scans upcoming doctor appointments and dispatches email notifications to Care Circle members
  * within the configured reminder window (default 24h).
  * Marks appointment reminder_sent = 1 to prevent duplicate dispatches.
- * 
+ *
  * @returns {Promise<Array<{appointmentId: number, doctorName: string}>>}
  */
 export async function checkAndSendAppointmentReminders() {
@@ -376,12 +434,12 @@ export async function checkAndSendAppointmentReminders() {
     WHERE a.status = 'upcoming' AND (a.reminder_sent = 0 OR a.reminder_sent IS NULL)
   `).all();
 
-  const stmtGetApptCareCircle = db.prepare(`
+  const getApptCareCircle = memoizeMembers(db.prepare(`
     SELECT u.email, u.name, u.id as user_id
     FROM care_circle c
     JOIN users u ON c.user_id = u.id
     WHERE c.patient_id = ?
-  `);
+  `));
   const stmtInsertApptNotification = db.prepare(`
     INSERT INTO notifications (patient_id, user_id, title, message, type, priority, email_status)
     VALUES (?, ?, ?, ?, 'appointment', 'medium', ?)
@@ -393,7 +451,7 @@ export async function checkAndSendAppointmentReminders() {
   const results = [];
   for (const appt of appts) {
     const { date: currentDate, timeString: currentTimeString } = getPatientDateTime(appt.timezone || 'Asia/Kolkata');
-    
+
     // Parse appointment datetime and current datetime
     const apptDateTime = new Date(`${appt.appointment_date}T${appt.appointment_time || '09:00'}:00`);
     const currentDateTime = new Date(`${currentDate}T${currentTimeString}:00`);
@@ -403,7 +461,7 @@ export async function checkAndSendAppointmentReminders() {
 
     // Send if within window and not in the past
     if (diffHours >= 0 && diffHours <= reminderThresholdHours) {
-      const members = stmtGetApptCareCircle.all(appt.patient_id);
+      const members = getApptCareCircle(appt.patient_id);
 
       const emailHtml = buildAppointmentEmail({
         patientName: appt.patient_name,
@@ -443,7 +501,7 @@ export async function checkAndSendAppointmentReminders() {
  * Scans active medications and dispatches reminder notifications 15-30 minutes before
  * a scheduled dose window. Records each dispatch in upcoming_dose_reminders to prevent
  * duplicate alerts.
- * 
+ *
  * @returns {Promise<Array<{medicationId: number, slot: string, scheduledTime: string}>>}
  */
 export async function checkAndSendUpcomingDoseReminders() {
@@ -454,24 +512,25 @@ export async function checkAndSendUpcomingDoseReminders() {
     WHERE m.is_active = 1
   `).all();
 
-  const stmtGetExistingDoseLog = db.prepare(`
-    SELECT id FROM medication_logs
-    WHERE patient_id = ? AND medication_id = ? AND scheduled_date = ? AND scheduled_slot = ?
-  `);
-  const stmtGetExistingUpcomingReminder = db.prepare(`
-    SELECT id FROM upcoming_dose_reminders
-    WHERE patient_id = ? AND medication_id = ? AND scheduled_date = ? AND scheduled_slot = ?
-  `);
+  // Efficiency: one query each for recent logs and sent reminders, then O(1) Set lookups.
+  const loggedDoses = new Set(db.prepare(`
+    SELECT patient_id, medication_id, scheduled_date, scheduled_slot
+    FROM medication_logs WHERE scheduled_date >= date('now', '-1 day')
+  `).all().map(r => doseKey(r.patient_id, r.medication_id, r.scheduled_date, r.scheduled_slot)));
+  const sentReminders = new Set(db.prepare(`
+    SELECT patient_id, medication_id, scheduled_date, scheduled_slot
+    FROM upcoming_dose_reminders WHERE scheduled_date >= date('now', '-1 day')
+  `).all().map(r => doseKey(r.patient_id, r.medication_id, r.scheduled_date, r.scheduled_slot)));
   const stmtInsertUpcomingReminder = db.prepare(`
     INSERT INTO upcoming_dose_reminders (patient_id, medication_id, scheduled_date, scheduled_slot)
     VALUES (?, ?, ?, ?)
   `);
-  const stmtGetUpcomingCareCircle = db.prepare(`
+  const getUpcomingCareCircle = memoizeMembers(db.prepare(`
     SELECT u.email, u.name, u.id as user_id, c.role
     FROM care_circle c
     JOIN users u ON c.user_id = u.id
     WHERE c.patient_id = ?
-  `);
+  `));
   const stmtInsertUpcomingDoseNotification = db.prepare(`
     INSERT INTO notifications (patient_id, user_id, title, message, type, priority, email_status)
     VALUES (?, ?, ?, ?, 'dose_reminder', 'low', ?)
@@ -495,16 +554,15 @@ export async function checkAndSendUpcomingDoseReminders() {
       const diffMinutes = scheduledMinutes - currentTimeMinutes;
       if (diffMinutes >= 0 && diffMinutes <= 30) {
         // Ensure not already logged today
-        const existingLog = stmtGetExistingDoseLog.get(med.patient_id, med.id, todayDate, slot);
+        const key = doseKey(med.patient_id, med.id, todayDate, slot);
 
-        if (!existingLog) {
+        if (!loggedDoses.has(key)) {
           // Ensure reminder email not already dispatched for this slot today
-          const alreadySent = stmtGetExistingUpcomingReminder.get(med.patient_id, med.id, todayDate, slot);
-
-          if (!alreadySent) {
+          if (!sentReminders.has(key)) {
+            sentReminders.add(key);
             stmtInsertUpcomingReminder.run(med.patient_id, med.id, todayDate, slot);
 
-            const members = stmtGetUpcomingCareCircle.all(med.patient_id);
+            const members = getUpcomingCareCircle(med.patient_id);
 
             const emailHtml = buildUpcomingDoseEmail({
               patientName: med.patient_name,

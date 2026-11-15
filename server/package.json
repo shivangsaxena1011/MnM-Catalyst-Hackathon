@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
-    "test": "node --test test/unit && node test/run-integration.js"
+    "test": "node --test \"test/unit/*.test.js\" && node test/run-integration.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

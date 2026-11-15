@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Appointment } from '../types';
 import { X, Calendar } from 'lucide-react';
 import { getErrorMessage } from '../utils/error';
+import { useFeedback } from './ui/FeedbackProvider';
 
 interface AddAppointmentModalProps {
   initialAppt?: Appointment | null;
@@ -11,6 +12,7 @@ interface AddAppointmentModalProps {
 }
 
 export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({ initialAppt, onClose, onSave }) => {
+  const { notify } = useFeedback();
   const [doctorName, setDoctorName] = useState(initialAppt?.doctor_name || '');
   const [specialty, setSpecialty] = useState(initialAppt?.specialty || '');
   const [clinicHospital, setClinicHospital] = useState(initialAppt?.clinic_hospital || '');
@@ -55,7 +57,7 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({ initia
       });
       onClose();
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to save appointment'));
+      notify(getErrorMessage(err, 'Failed to save appointment'), 'error');
     } finally {
       setSubmitting(false);
     }

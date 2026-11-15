@@ -1,16 +1,23 @@
 import express from 'express';
+import { randomInt } from 'node:crypto';
 import { db } from '../db/database.js';
 import { requireAuth, requirePatientAccess, requireEditPermission } from '../middleware/auth.js';
 import { joinRateLimiter } from '../middleware/rateLimiter.js';
 
 const router = express.Router();
 
-// Helper to generate readable 6-character invite code
+// Unambiguous alphabet (no 0/O, 1/I) so codes are easy to read aloud and type
+const INVITE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+/**
+ * Generate a human-readable invite code (e.g. SAATHI-7A8B).
+ * Uses a cryptographically secure RNG because the code grants access to health data.
+ * @returns {string}
+ */
 function generateInviteCode() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code = 'SAATHI-';
   for (let i = 0; i < 4; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
+    code += INVITE_ALPHABET[randomInt(INVITE_ALPHABET.length)];
   }
   return code;
 }

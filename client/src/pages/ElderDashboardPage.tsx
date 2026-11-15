@@ -8,6 +8,7 @@ import {
   Volume2, Check, X, PhoneCall, Heart,
   ShieldCheck, Clock, Utensils
 } from 'lucide-react';
+import { useFeedback } from '../components/ui/FeedbackProvider';
 
 interface ElderDashboardPageProps {
   onBackToStandard: () => void;
@@ -15,6 +16,7 @@ interface ElderDashboardPageProps {
 }
 
 export const ElderDashboardPage: React.FC<ElderDashboardPageProps> = ({ onBackToStandard, onOpenAi }) => {
+  const { notify, confirm: confirmAction } = useFeedback();
   const { activePatient } = useAuth();
   const { speak } = useElderMode();
 
@@ -81,13 +83,13 @@ export const ElderDashboardPage: React.FC<ElderDashboardPageProps> = ({ onBackTo
       setTimeout(() => setActionMessage(null), 4000);
       await loadSchedule();
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to record dose'));
+      notify(getErrorMessage(err, 'Failed to record dose'), 'error');
     }
   };
 
   const handleSkipDose = async () => {
     if (!currentDose || !activePatient) return;
-    if (!window.confirm(`Are you sure you want to skip ${currentDose.medication_name}? Never take double on your next dose.`)) return;
+    if (!(await confirmAction({ title: 'Skip this medicine?', message: `Are you sure you want to skip ${currentDose.medication_name}? Never take double on your next dose.`, confirmLabel: 'Yes, skip it', destructive: true }))) return;
 
     try {
       await api.logs.recordStatus(activePatient.id, {
@@ -102,7 +104,7 @@ export const ElderDashboardPage: React.FC<ElderDashboardPageProps> = ({ onBackTo
       setTimeout(() => setActionMessage(null), 4000);
       await loadSchedule();
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to record dose'));
+      notify(getErrorMessage(err, 'Failed to record dose'), 'error');
     }
   };
 

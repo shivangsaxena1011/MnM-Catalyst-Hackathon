@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { MedicationLog } from '../types';
 import { Check, X, ShieldAlert, Pill, Clock } from 'lucide-react';
 import { getErrorMessage } from '../utils/error';
+import { useFeedback } from './ui/FeedbackProvider';
 
 interface DoseActionModalProps {
   item: MedicationLog | null;
@@ -11,6 +12,7 @@ interface DoseActionModalProps {
 }
 
 export const DoseActionModal: React.FC<DoseActionModalProps> = ({ item, onClose, onConfirm }) => {
+  const { notify } = useFeedback();
   const [mode, setMode] = useState<'taken' | 'skipped'>('taken');
   const [skippedReason, setSkippedReason] = useState('');
   const [notes, setNotes] = useState('');
@@ -43,7 +45,7 @@ export const DoseActionModal: React.FC<DoseActionModalProps> = ({ item, onClose,
       await onConfirm(mode, skippedReason, notes);
       onClose();
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to update dose'));
+      notify(getErrorMessage(err, 'Failed to update dose'), 'error');
     } finally {
       setSubmitting(false);
     }

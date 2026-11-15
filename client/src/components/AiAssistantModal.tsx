@@ -4,6 +4,7 @@ import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { Sparkles, X, Send, ShieldAlert } from 'lucide-react';
 import { getErrorMessage } from '../utils/error';
+import { useFeedback } from './ui/FeedbackProvider';
 
 interface AiAssistantModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface AiAssistantModalProps {
 }
 
 export const AiAssistantModal: React.FC<AiAssistantModalProps> = ({ isOpen, onClose }) => {
+  const { notify } = useFeedback();
   const { activePatient } = useAuth();
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
@@ -53,7 +55,7 @@ export const AiAssistantModal: React.FC<AiAssistantModalProps> = ({ isOpen, onCl
       });
       setResponse(res);
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to get answer from AI Assistant'));
+      notify(getErrorMessage(err, 'Failed to get answer from AI Assistant'), 'error');
     } finally {
       setLoading(false);
     }

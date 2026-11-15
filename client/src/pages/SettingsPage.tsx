@@ -7,8 +7,10 @@ import {
   Settings, Accessibility, KeyRound, Mail, Sparkles,
   Trash2, ShieldCheck, HeartHandshake
 } from 'lucide-react';
+import { useFeedback } from '../components/ui/FeedbackProvider';
 
 export const SettingsPage: React.FC = () => {
+  const { notify, confirm: confirmAction } = useFeedback();
   const { user, activePatient, refreshPatients } = useAuth();
   const { isElderMode, toggleElderMode } = useElderMode();
 
@@ -22,7 +24,7 @@ export const SettingsPage: React.FC = () => {
   const handleUpdatePasscode = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!passcode || passcode.length < 4) {
-      alert('Passcode must be at least 4 digits');
+      notify('Passcode must be at least 4 digits', 'error');
       return;
     }
     setPasscodeLoading(true);
@@ -32,7 +34,7 @@ export const SettingsPage: React.FC = () => {
       setPasscodeMsg('Security PIN updated successfully');
       setPasscode('');
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to update passcode'));
+      notify(getErrorMessage(err, 'Failed to update passcode'), 'error');
     } finally {
       setPasscodeLoading(false);
     }
@@ -46,14 +48,14 @@ export const SettingsPage: React.FC = () => {
       await refreshPatients();
       setDemoMsg(res.message);
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to seed demo data'));
+      notify(getErrorMessage(err, 'Failed to seed demo data'), 'error');
     } finally {
       setDemoLoading(false);
     }
   };
 
   const handleResetDemo = async () => {
-    if (!window.confirm('Reset judge demo profile data?')) return;
+    if (!(await confirmAction({ title: 'Reset demo profile?', message: 'Reset judge demo profile data?', confirmLabel: 'Reset', destructive: true }))) return;
     setDemoLoading(true);
     setDemoMsg(null);
     try {
@@ -61,7 +63,7 @@ export const SettingsPage: React.FC = () => {
       await refreshPatients();
       setDemoMsg(res.message);
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to reset demo data'));
+      notify(getErrorMessage(err, 'Failed to reset demo data'), 'error');
     } finally {
       setDemoLoading(false);
     }

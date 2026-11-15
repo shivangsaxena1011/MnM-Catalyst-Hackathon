@@ -7,8 +7,10 @@ import {
   Users, Copy, Check, Shield, UserCheck,
   UserX, Phone, Mail, Sparkles, KeyRound
 } from 'lucide-react';
+import { useFeedback } from '../components/ui/FeedbackProvider';
 
 export const CareCirclePage: React.FC = () => {
+  const { notify, confirm: confirmAction } = useFeedback();
   const { activePatient } = useAuth();
   const [members, setMembers] = useState<CareCircleMember[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,18 +48,18 @@ export const CareCirclePage: React.FC = () => {
       });
       await loadCareCircle();
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to update permissions'));
+      notify(getErrorMessage(err, 'Failed to update permissions'), 'error');
     }
   };
 
   const handleRemoveMember = async (member: CareCircleMember) => {
     if (!activePatient) return;
-    if (!window.confirm(`Remove ${member.name} from this Care Circle?`)) return;
+    if (!(await confirmAction({ title: 'Remove member?', message: `Remove ${member.name} from this Care Circle?`, confirmLabel: 'Remove', destructive: true }))) return;
     try {
       await api.patients.removeMember(activePatient.id, member.membership_id);
       await loadCareCircle();
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to remove member'));
+      notify(getErrorMessage(err, 'Failed to remove member'), 'error');
     }
   };
 

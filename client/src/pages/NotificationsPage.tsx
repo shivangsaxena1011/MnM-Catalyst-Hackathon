@@ -8,8 +8,10 @@ import {
   Bell, ShieldAlert, CheckCircle2, Clock, Mail,
   AlertTriangle, PlayCircle, CheckCheck
 } from 'lucide-react';
+import { useFeedback } from '../components/ui/FeedbackProvider';
 
 export const NotificationsPage: React.FC = () => {
+  const { notify } = useFeedback();
   const { activePatient } = useAuth();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,7 +42,7 @@ export const NotificationsPage: React.FC = () => {
       await api.notifications.markRead(activePatient.id, notifId);
       setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, is_read: 1 } : n));
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to update notification'));
+      notify(getErrorMessage(err, 'Failed to update notification'), 'error');
     }
   };
 
@@ -50,7 +52,7 @@ export const NotificationsPage: React.FC = () => {
       await api.notifications.markAllRead(activePatient.id);
       setNotifications(prev => prev.map(n => ({ ...n, is_read: 1 })));
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to mark all as read'));
+      notify(getErrorMessage(err, 'Failed to mark all as read'), 'error');
     }
   };
 
@@ -60,9 +62,9 @@ export const NotificationsPage: React.FC = () => {
     try {
       await api.escalations.simulate(activePatient.id, { slot: 'morning', tier: 3 });
       await loadNotifications();
-      alert('Simulated Tier 3 Caregiver Escalation dispatched. Check the alert banner and notifications list below.');
+      notify('Simulated Tier 3 Caregiver Escalation dispatched. Check the alert banner and notifications list below.', 'success');
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to simulate escalation'));
+      notify(getErrorMessage(err, 'Failed to simulate escalation'), 'error');
     } finally {
       setSimulating(false);
     }

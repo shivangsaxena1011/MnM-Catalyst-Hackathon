@@ -16,6 +16,7 @@ import {
   PhoneCall, HeartPulse, RefreshCw, AlertTriangle,
   Sparkles, PackageCheck
 } from 'lucide-react';
+import { useFeedback } from '../components/ui/FeedbackProvider';
 
 interface DashboardPageProps {
   onNavigate: (page: string) => void;
@@ -23,6 +24,7 @@ interface DashboardPageProps {
 }
 
 export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate, onOpenAi }) => {
+  const { notify } = useFeedback();
   const { activePatient } = useAuth();
   const { isElderMode } = useElderMode();
 
@@ -139,7 +141,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate, onOpen
       await api.escalations.resolve(activePatient.id, escId, 'Resolved from dashboard follow-up');
       await loadDashboardData();
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to resolve escalation'));
+      notify(getErrorMessage(err, 'Failed to resolve escalation'), 'error');
     }
   };
 

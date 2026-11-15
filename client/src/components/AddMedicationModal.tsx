@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Medication, MealTiming } from '../types';
 import { X, Pill } from 'lucide-react';
 import { getErrorMessage } from '../utils/error';
+import { useFeedback } from './ui/FeedbackProvider';
 
 interface AddMedicationModalProps {
   initialMed?: Medication | null;
@@ -18,6 +19,7 @@ const AVAILABLE_SLOTS = [
 ];
 
 export const AddMedicationModal: React.FC<AddMedicationModalProps> = ({ initialMed, onClose, onSave }) => {
+  const { notify } = useFeedback();
   const [name, setName] = useState(initialMed?.name || '');
   const [genericName, setGenericName] = useState(initialMed?.generic_name || '');
   const [dosage, setDosage] = useState(initialMed?.dosage || '');
@@ -60,7 +62,7 @@ export const AddMedicationModal: React.FC<AddMedicationModalProps> = ({ initialM
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !dosage.trim()) {
-      alert('Please provide medication name and dosage');
+      notify('Please provide medication name and dosage', 'error');
       return;
     }
 
@@ -81,7 +83,7 @@ export const AddMedicationModal: React.FC<AddMedicationModalProps> = ({ initialM
       });
       onClose();
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to save medication'));
+      notify(getErrorMessage(err, 'Failed to save medication'), 'error');
     } finally {
       setSubmitting(false);
     }

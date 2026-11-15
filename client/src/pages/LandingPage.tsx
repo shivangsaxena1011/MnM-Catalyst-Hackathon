@@ -7,6 +7,7 @@ import {
   ArrowRight, CheckCircle2, ChevronRight, Volume2,
   Heart, AlertTriangle, Calendar, Activity, Lock, Eye
 } from 'lucide-react';
+import { useFeedback } from '../components/ui/FeedbackProvider';
 
 const HeroScene = lazy(() => import('../components/three/HeroScene'));
 
@@ -16,6 +17,7 @@ interface LandingPageProps {
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin }) => {
+  const { notify } = useFeedback();
   const { loginAsGuest } = useAuth();
   const [demoLoading, setDemoLoading] = useState(false);
 
@@ -24,7 +26,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
     try {
       await loginAsGuest();
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to start demo'));
+      notify(getErrorMessage(err, 'Failed to start demo'), 'error');
       setDemoLoading(false);
     }
   };

@@ -22,7 +22,7 @@
 Traditional medication apps are built for tech-savvy young adults—they rely on small text, noisy push notifications, and isolated alarm clocks that fail when an elderly parent is confused, resting, or visually impaired. When an elder misses critical cardiac or diabetic medication, isolated alarms do nothing to alert the children living across town.
 
 **SAATHI CARE replaces isolated alarms with an active, collaborative safety net:**
-- **Zero-Barrier Elder Experience:** Giant 40px+ typography, high-contrast WCAG AA palette, 84px+ single-tap action buttons, and native **Web Speech API audio narration** that reads instructions aloud.
+- **Zero-Barrier Elder Experience:** Giant 40px+ typography, high-contrast, accessibility-first palette, 84px+ single-tap action buttons, and native **Web Speech API audio narration** that reads instructions aloud.
 - **Collaborative Care Circle:** Real-time synchronization between senior, family, and caregiver with role-based editing permissions and 4-digit PIN authentication.
 - **Autonomous Multi-Tier Escalations:** Overdue doses automatically escalate from gentle nudges to high-priority family dashboard alerts and automated emergency emails.
 - **Appointment Guardian:** Synchronized doctor visit tracker with automated **24-hour advance email reminders**.

@@ -8,8 +8,10 @@ import {
   Calendar, Plus, Clock, MapPin, CheckCircle2,
   XCircle, Edit2, Trash2, CalendarDays
 } from 'lucide-react';
+import { useFeedback } from '../components/ui/FeedbackProvider';
 
 export const AppointmentsPage: React.FC = () => {
+  const { notify, confirm: confirmAction } = useFeedback();
   const { activePatient } = useAuth();
   const [upcoming, setUpcoming] = useState<Appointment[]>([]);
   const [past, setPast] = useState<Appointment[]>([]);
@@ -48,12 +50,12 @@ export const AppointmentsPage: React.FC = () => {
 
   const handleDelete = async (apptId: number) => {
     if (!activePatient) return;
-    if (!window.confirm('Are you sure you want to delete this appointment?')) return;
+    if (!(await confirmAction({ title: 'Delete appointment?', message: 'Are you sure you want to delete this appointment?', confirmLabel: 'Delete', destructive: true }))) return;
     try {
       await api.appointments.delete(activePatient.id, apptId);
       await loadAppointments();
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to delete appointment'));
+      notify(getErrorMessage(err, 'Failed to delete appointment'), 'error');
     }
   };
 
@@ -63,7 +65,7 @@ export const AppointmentsPage: React.FC = () => {
       await api.appointments.update(activePatient.id, appt.id, { status: newStatus });
       await loadAppointments();
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to update status'));
+      notify(getErrorMessage(err, 'Failed to update status'), 'error');
     }
   };
 

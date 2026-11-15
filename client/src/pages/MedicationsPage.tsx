@@ -7,8 +7,10 @@ import { getErrorMessage } from '../utils/error';
 import {
   Pill, Plus, Edit2, Trash2, AlertCircle, Clock, PackageCheck
 } from 'lucide-react';
+import { useFeedback } from '../components/ui/FeedbackProvider';
 
 export const MedicationsPage: React.FC = () => {
+  const { notify, confirm: confirmAction } = useFeedback();
   const { activePatient } = useAuth();
   const [medications, setMedications] = useState<Medication[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,12 +46,12 @@ export const MedicationsPage: React.FC = () => {
 
   const handleDeleteMedication = async (medId: number, medName: string) => {
     if (!activePatient) return;
-    if (!window.confirm(`Discontinue ${medName}? This will remove it from daily schedules.`)) return;
+    if (!(await confirmAction({ title: 'Discontinue medication?', message: `Discontinue ${medName}? This will remove it from daily schedules.`, confirmLabel: 'Discontinue', destructive: true }))) return;
     try {
       await api.medications.delete(activePatient.id, medId);
       await loadMedications();
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to delete medication'));
+      notify(getErrorMessage(err, 'Failed to delete medication'), 'error');
     }
   };
 

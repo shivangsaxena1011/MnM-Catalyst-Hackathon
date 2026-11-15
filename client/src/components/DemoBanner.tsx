@@ -3,8 +3,10 @@ import { api } from '../api/client';
 import { getErrorMessage } from '../utils/error';
 import { useAuth } from '../context/AuthContext';
 import { Sparkles, Trash2, CheckCircle2 } from 'lucide-react';
+import { useFeedback } from './ui/FeedbackProvider';
 
 export const DemoBanner: React.FC = () => {
+  const { notify, confirm: confirmAction } = useFeedback();
   const { user, refreshPatients, activePatient, logout } = useAuth();
   const [loading, setLoading] = useState(false);
   const [bannerMsg, setBannerMsg] = useState<string | null>(null);
@@ -44,14 +46,14 @@ export const DemoBanner: React.FC = () => {
       setBannerMsg(res.message);
       setTimeout(() => setBannerMsg(null), 5000);
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to seed demo data'));
+      notify(getErrorMessage(err, 'Failed to seed demo data'), 'error');
     } finally {
       setLoading(false);
     }
   };
 
   const handleReset = async () => {
-    if (!window.confirm('Reset demo profile data? This will clear the judge preview profile.')) return;
+    if (!(await confirmAction({ title: 'Reset demo profile?', message: 'Reset demo profile data? This will clear the judge preview profile.', confirmLabel: 'Reset', destructive: true }))) return;
     setLoading(true);
     try {
       const res = await api.demo.reset();
@@ -59,7 +61,7 @@ export const DemoBanner: React.FC = () => {
       setBannerMsg(res.message);
       setTimeout(() => setBannerMsg(null), 4000);
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to reset demo data'));
+      notify(getErrorMessage(err, 'Failed to reset demo data'), 'error');
     } finally {
       setLoading(false);
     }

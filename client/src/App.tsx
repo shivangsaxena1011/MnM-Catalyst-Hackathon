@@ -2,6 +2,7 @@ import React, { useState, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ElderModeProvider, useElderMode } from './context/ElderModeContext';
+import { FeedbackProvider } from './components/ui/FeedbackProvider';
 import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
 import { DemoBanner } from './components/DemoBanner';
@@ -184,7 +185,9 @@ export default function App() {
   return (
     <AuthProvider>
       <ElderModeProvider>
-        <MainApp />
+        <FeedbackProvider>
+          <MainApp />
+        </FeedbackProvider>
       </ElderModeProvider>
     </AuthProvider>
   );
