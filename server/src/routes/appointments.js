@@ -194,8 +194,9 @@ router.put('/:patientId/:appointmentId', requireAuth, requirePatientAccess, requ
           updated_at = CURRENT_TIMESTAMP
       WHERE id = ? AND patient_id = ?
     `).run(
-      doctor_name, specialty, clinic_hospital, address,
-      appointment_date, appointment_time, notes, status, reminder_hours,
+      doctor_name ?? null, specialty ?? null, clinic_hospital ?? null, address ?? null,
+      appointment_date ?? null, appointment_time ?? null, notes ?? null, status ?? null,
+      reminder_hours ?? null,
       req.params.appointmentId, req.params.patientId
     );
 
