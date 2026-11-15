@@ -1,0 +1,171 @@
+import express from 'express';
+import { db } from '../db/database.js';
+import { requireAuth, requirePatientAccess, requireEditPermission } from '../middleware/auth.js';
+import { sendNotificationEmail } from '../services/emailService.js';
+
+const router = express.Router();
+
+/**
+ * List all appointments for a patient
+ */
+router.get('/:patientId', requireAuth, requirePatientAccess, (req, res) => {
+  try {
+    const appointments = db.prepare(`
+      SELECT * FROM appointments
+      WHERE patient_id = ?
+      ORDER BY appointment_date ASC, appointment_time ASC
+    `).all(req.params.patientId);
+
+    const today = new Date().toISOString().split('T')[0];
+    const upcoming = appointments.filter(a => a.appointment_date >= today && a.status === 'upcoming');
+    const past = appointments.filter(a => a.appointment_date < today || a.status !== 'upcoming');
+
+    return res.json({ appointments, upcoming, past });
+  } catch (err) {
+    console.error('[Get Appointments Error]:', err);
+    return res.status(500).json({ error: 'Failed to fetch appointments' });
+  }
+});
+
+/**
+ * Create a new appointment
+ */
+router.post('/:patientId', requireAuth, requirePatientAccess, requireEditPermission, async (req, res) => {
+  try {
+    const {
+      doctor_name,
+      specialty,
+      clinic_hospital,
+      address,
+      appointment_date,
+      appointment_time,
+      notes,
+      reminder_hours = 24,
+    } = req.body;
+
+    if (!doctor_name || !specialty || !clinic_hospital || !appointment_date || !appointment_time) {
+      return res.status(400).json({ error: 'Doctor name, specialty, clinic/hospital, date, and time are required' });
+    }
+
+    const patientId = Number(req.params.patientId);
+
+    const result = db.prepare(`
+      INSERT INTO appointments (
+        patient_id, doctor_name, specialty, clinic_hospital, address,
+        appointment_date, appointment_time, notes, reminder_hours, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'upcoming')
+    `).run(
+      patientId,
+      doctor_name.trim(),
+      specialty.trim(),
+      clinic_hospital.trim(),
+      address ? address.trim() : null,
+      appointment_date,
+      appointment_time,
+      notes ? notes.trim() : null,
+      Number(reminder_hours) || 24
+    );
+
+    const apptId = Number(result.lastInsertRowid);
+
+    // Audit activity
+    db.prepare(`
+      INSERT INTO activities (patient_id, user_id, action_type, title, details)
+      VALUES (?, ?, 'appointment_scheduled', 'Doctor Appointment Scheduled', ?)
+    `).run(
+      patientId,
+      req.user.id,
+      `Consultation with Dr. ${doctor_name} (${specialty}) at ${clinic_hospital} on ${appointment_date} at ${appointment_time}`
+    );
+
+    // Notify Care Circle
+    const patient = db.prepare('SELECT full_name FROM patients WHERE id = ?').get(patientId);
+    const members = db.prepare(`
+      SELECT cc.*, u.email 
+      FROM care_circle cc
+      JOIN users u ON cc.user_id = u.id
+      WHERE cc.patient_id = ?
+    `).all(patientId);
+
+    for (const m of members) {
+      db.prepare(`
+        INSERT INTO notifications (patient_id, user_id, title, message, type, priority)
+        VALUES (?, ?, 'Upcoming Doctor Appointment', ?, 'appointment', 'medium')
+      `).run(
+        patientId,
+        m.user_id,
+        `${patient.full_name} has an appointment with Dr. ${doctor_name} (${specialty}) on ${appointment_date} at ${appointment_time}.`
+      );
+    }
+
+    const created = db.prepare('SELECT * FROM appointments WHERE id = ?').get(apptId);
+    return res.status(201).json({
+      message: 'Appointment scheduled successfully',
+      appointment: created,
+    });
+  } catch (err) {
+    console.error('[Add Appointment Error]:', err);
+    return res.status(500).json({ error: 'Failed to schedule appointment' });
+  }
+});
+
+/**
+ * Update an appointment
+ */
+router.put('/:patientId/:appointmentId', requireAuth, requirePatientAccess, requireEditPermission, (req, res) => {
+  try {
+    const {
+      doctor_name,
+      specialty,
+      clinic_hospital,
+      address,
+      appointment_date,
+      appointment_time,
+      notes,
+      status,
+      reminder_hours,
+    } = req.body;
+
+    db.prepare(`
+      UPDATE appointments
+      SET doctor_name = COALESCE(?, doctor_name),
+          specialty = COALESCE(?, specialty),
+          clinic_hospital = COALESCE(?, clinic_hospital),
+          address = COALESCE(?, address),
+          appointment_date = COALESCE(?, appointment_date),
+          appointment_time = COALESCE(?, appointment_time),
+          notes = COALESCE(?, notes),
+          status = COALESCE(?, status),
+          reminder_hours = COALESCE(?, reminder_hours),
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = ? AND patient_id = ?
+    `).run(
+      doctor_name, specialty, clinic_hospital, address,
+      appointment_date, appointment_time, notes, status, reminder_hours,
+      req.params.appointmentId, req.params.patientId
+    );
+
+    const updated = db.prepare('SELECT * FROM appointments WHERE id = ?').get(req.params.appointmentId);
+    return res.json({ message: 'Appointment updated successfully', appointment: updated });
+  } catch (err) {
+    console.error('[Update Appointment Error]:', err);
+    return res.status(500).json({ error: 'Failed to update appointment' });
+  }
+});
+
+/**
+ * Delete an appointment
+ */
+router.delete('/:patientId/:appointmentId', requireAuth, requirePatientAccess, requireEditPermission, (req, res) => {
+  try {
+    db.prepare('DELETE FROM appointments WHERE id = ? AND patient_id = ?').run(
+      req.params.appointmentId, req.params.patientId
+    );
+    return res.json({ message: 'Appointment deleted successfully' });
+  } catch (err) {
+    console.error('[Delete Appointment Error]:', err);
+    return res.status(500).json({ error: 'Failed to delete appointment' });
+  }
+});
+
+export default router;

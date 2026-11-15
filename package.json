@@ -1,0 +1,23 @@
+{
+  "name": "saathi-care",
+  "version": "1.0.0",
+  "description": "SAATHI CARE - Collaborative Elderly Healthcare & Medication Management Platform",
+  "private": true,
+  "scripts": {
+    "start": "node server/src/index.js",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "build:client": "cd client && npm run build",
+    "build": "npm run build:client",
+    "install:all": "npm install && cd server && npm install && cd ../client && npm install"
+  },
+  "keywords": [
+    "healthcare",
+    "elderly-care",
+    "medication-adherence",
+    "care-circle",
+    "hackathon"
+  ],
+  "author": "Shivang Saxena",
+  "license": "MIT"
+}
