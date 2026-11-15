@@ -1,17 +1,19 @@
 import express from 'express';
 import { db } from '../db/database.js';
-import { requireAuth, requirePatientAccess } from '../middleware/auth.js';
+import { requireAuth, requirePatientAccess, requireEditPermission } from '../middleware/auth.js';
+import { getPatientDateTime } from '../services/escalationService.js';
 
 const router = express.Router();
 
 /**
  * Get medication logs for a date range
- * Default: today's logs + schedule view
+ * Uses patient's configured timezone consistently
  */
 router.get('/:patientId', requireAuth, requirePatientAccess, (req, res) => {
   try {
     const { date, start_date, end_date } = req.query;
-    const targetDate = date || new Date().toISOString().split('T')[0];
+    const tzInfo = getPatientDateTime(req.membership.timezone || 'Asia/Kolkata');
+    const targetDate = date || tzInfo.date;
 
     let query = `
       SELECT ml.*, m.name as medication_name, m.dosage, m.form, m.instructions, m.meal_timing,
@@ -76,16 +78,17 @@ router.get('/:patientId', requireAuth, requirePatientAccess, (req, res) => {
 
     return res.json({ date: targetDate, schedule: fullSchedule, logs });
   } catch (err) {
-    console.error('[Get Logs Error]:', err);
+    console.error('[Get Logs Error]:', err.message);
     return res.status(500).json({ error: 'Failed to fetch medication logs' });
   }
 });
 
 /**
  * Record or update dose adherence status (Taken, Missed, Skipped)
- * Strict duplicate prevention: checks and upserts uniquely on (patient_id, medication_id, scheduled_date, scheduled_slot)
+ * Strict duplicate prevention & Edit permission enforcement:
+ * Only authorized members with can_edit=1 or the senior self can record/update logs.
  */
-router.post('/:patientId/log', requireAuth, requirePatientAccess, (req, res) => {
+router.post('/:patientId/log', requireAuth, requirePatientAccess, requireEditPermission, (req, res) => {
   try {
     const {
       medication_id,
@@ -96,8 +99,18 @@ router.post('/:patientId/log', requireAuth, requirePatientAccess, (req, res) => 
       notes,
     } = req.body;
 
-    if (!medication_id || !scheduled_date || !scheduled_slot || !status) {
-      return res.status(400).json({ error: 'medication_id, scheduled_date, scheduled_slot, and status are required' });
+    const VALID_STATUSES = ['taken', 'missed', 'skipped', 'upcoming'];
+    if (!status || !VALID_STATUSES.includes(status)) {
+      return res.status(400).json({ error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}` });
+    }
+
+    if (!medication_id || !scheduled_date || !scheduled_slot) {
+      return res.status(400).json({ error: 'medication_id, scheduled_date, and scheduled_slot are required' });
+    }
+
+    // Validate scheduled_date format (YYYY-MM-DD)
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(scheduled_date)) {
+      return res.status(400).json({ error: 'scheduled_date must be in YYYY-MM-DD format' });
     }
 
     const patientId = Number(req.params.patientId);
@@ -173,7 +186,7 @@ router.post('/:patientId/log', requireAuth, requirePatientAccess, (req, res) => 
       `).run(
         patientId,
         req.user.id,
-        `${med.name} skipped for ${scheduled_slot}. Reason: ${skipped_reason || 'No reason provided'}`
+        `${med.name} skipped for ${scheduled_slot}. Reason: ${skipped_reason || 'No reason provided'}. Protocol: Never double missed dose.`
       );
     }
 
@@ -189,25 +202,32 @@ router.post('/:patientId/log', requireAuth, requirePatientAccess, (req, res) => 
       log: updatedLog,
     });
   } catch (err) {
-    console.error('[Record Log Error]:', err);
+    console.error('[Record Log Error]:', err.message);
     return res.status(500).json({ error: 'Failed to record medication status' });
   }
 });
 
 /**
  * Adherence Analytics for charts and Family Dashboard
- * Returns 7-day adherence rate, streak, status distribution, and slot analytics
+ * Uses patient's timezone for accurate daily trend alignment
  */
 router.get('/:patientId/adherence-stats', requireAuth, requirePatientAccess, (req, res) => {
   try {
     const patientId = Number(req.params.patientId);
+    const tz = req.membership.timezone || 'Asia/Kolkata';
 
-    // Compute last 7 days dates
+    // Compute last 7 days dates using patient's timezone
     const dates = [];
     for (let i = 6; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
-      dates.push(d.toISOString().split('T')[0]);
+      const dStr = new Intl.DateTimeFormat('en-CA', {
+        timeZone: tz,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).format(d);
+      dates.push(dStr);
     }
 
     const startDate = dates[0];
@@ -236,8 +256,8 @@ router.get('/:patientId/adherence-stats', requireAuth, requirePatientAccess, (re
       const totalExpected = taken + missed + skipped;
       const rate = totalExpected > 0 ? Math.round((taken / totalExpected) * 100) : 100;
 
-      const dateObj = new Date(date);
-      const dayLabel = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+      const dateObj = new Date(`${date}T12:00:00Z`);
+      const dayLabel = dateObj.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' });
 
       return {
         date,
@@ -281,7 +301,7 @@ router.get('/:patientId/adherence-stats', requireAuth, requirePatientAccess, (re
       slotStats,
     });
   } catch (err) {
-    console.error('[Adherence Stats Error]:', err);
+    console.error('[Adherence Stats Error]:', err.message);
     return res.status(500).json({ error: 'Failed to calculate adherence metrics' });
   }
 });

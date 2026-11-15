@@ -1,6 +1,6 @@
 import express from 'express';
 import { db } from '../db/database.js';
-import { requireAuth, requirePatientAccess } from '../middleware/auth.js';
+import { requireAuth, requirePatientAccess, requireEditPermission } from '../middleware/auth.js';
 import { checkAndEscalateDoses, triggerManualEscalation } from '../services/escalationService.js';
 
 const router = express.Router();
@@ -25,7 +25,7 @@ router.get('/:patientId', requireAuth, requirePatientAccess, (req, res) => {
 
     return res.json({ escalations, active, resolved });
   } catch (err) {
-    console.error('[Get Escalations Error]:', err);
+    console.error('[Get Escalations Error]:', err.message);
     return res.status(500).json({ error: 'Failed to fetch escalations' });
   }
 });
@@ -41,21 +41,22 @@ router.post('/:patientId/scan', requireAuth, requirePatientAccess, async (req, r
       escalationsTriggered: triggered,
     });
   } catch (err) {
-    console.error('[Scan Escalations Error]:', err);
+    console.error('[Scan Escalations Error]:', err.message);
     return res.status(500).json({ error: 'Failed to run escalation scan' });
   }
 });
 
 /**
  * Trigger a simulated escalation for demo / judges
+ * Requires edit permission
  */
-router.post('/:patientId/simulate', requireAuth, requirePatientAccess, async (req, res) => {
+router.post('/:patientId/simulate', requireAuth, requirePatientAccess, requireEditPermission, async (req, res) => {
   try {
     const { medication_id, slot = 'morning', tier = 3 } = req.body;
 
     let targetMedId = medication_id;
     if (!targetMedId) {
-      // Pick the first active medication for this patient
+      // Pick first active medication for this patient
       const firstMed = db.prepare('SELECT id FROM medications WHERE patient_id = ? AND is_active = 1 LIMIT 1').get(req.params.patientId);
       if (!firstMed) {
         return res.status(400).json({ error: 'No active medications found to simulate escalation' });
@@ -75,17 +76,23 @@ router.post('/:patientId/simulate', requireAuth, requirePatientAccess, async (re
       ...result,
     });
   } catch (err) {
-    console.error('[Simulate Escalation Error]:', err);
+    console.error('[Simulate Escalation Error]:', err.message);
     return res.status(500).json({ error: err.message || 'Failed to simulate escalation' });
   }
 });
 
 /**
  * Resolve an active escalation
+ * Requires edit permission
  */
-router.post('/:patientId/:escalationId/resolve', requireAuth, requirePatientAccess, (req, res) => {
+router.post('/:patientId/:escalationId/resolve', requireAuth, requirePatientAccess, requireEditPermission, (req, res) => {
   try {
-    const { notes = 'Dose confirmed or followed up with senior' } = req.body;
+    const { notes = 'Dose followed up with senior' } = req.body;
+
+    const esc = db.prepare('SELECT id FROM escalations WHERE id = ? AND patient_id = ?').get(req.params.escalationId, req.params.patientId);
+    if (!esc) {
+      return res.status(404).json({ error: 'Escalation record not found' });
+    }
 
     db.prepare(`
       UPDATE escalations
@@ -104,7 +111,7 @@ router.post('/:patientId/:escalationId/resolve', requireAuth, requirePatientAcce
 
     return res.json({ message: 'Escalation marked as resolved' });
   } catch (err) {
-    console.error('[Resolve Escalation Error]:', err);
+    console.error('[Resolve Escalation Error]:', err.message);
     return res.status(500).json({ error: 'Failed to resolve escalation' });
   }
 });

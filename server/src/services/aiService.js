@@ -4,6 +4,7 @@
  * Strictly adheres to clinical safety:
  * - NEVER diagnoses diseases.
  * - NEVER recommends changing dosage or altering prescriptions.
+ * - ALWAYS warns against doubling missed doses.
  * - Always includes safety disclaimers.
  * - Dual engine: Uses Gemini API when GEMINI_API_KEY is configured,
  *   otherwise falls back to a comprehensive clinical rule-based knowledge engine.
@@ -77,8 +78,74 @@ const CLINICAL_KNOWLEDGE_BASE = {
 export async function explainMedication({ query, medicationList = [], patientConditions = '' }) {
   const apiKey = process.env.GEMINI_API_KEY;
   const trimmedQuery = (query || '').trim();
+  const qLower = trimmedQuery.toLowerCase();
 
-  // If Gemini API Key is provided, use Google GenAI
+  // 1. HARD MEDICAL SAFETY GUARDRAILS (Pre-execution intercept)
+  // Check for dosage alteration or doubling missed dose attempts
+  if (
+    qLower.includes('change dose') ||
+    qLower.includes('double dose') ||
+    qLower.includes('double up') ||
+    qLower.includes('take 2 pills') ||
+    qLower.includes('take two pills') ||
+    qLower.includes('increase dose') ||
+    qLower.includes('decrease dose') ||
+    qLower.includes('stop taking') ||
+    qLower.includes('prescribe me') ||
+    qLower.includes('alter dosage')
+  ) {
+    return {
+      source: 'clinical-safety-guardrail',
+      answer: `🛡️ **Clinical Safety Protocol:** 
+
+Only your prescribing physician or licensed doctor can safely adjust your medication dosages or modify your prescription.
+
+**Critical Safety Rule for Missed Doses:**
+- **NEVER take a double dose** to make up for a missed pill. Taking extra medication can cause dangerous drops in blood pressure, hypoglycemia, or drug toxicity.
+- If you forgot a dose and it is close to your next scheduled time, skip the forgotten dose and continue with your normal schedule.
+- Please call your doctor's clinic or speak directly with your pharmacist for specific clinical guidance.`,
+      disclaimer: SAFETY_DISCLAIMER,
+    };
+  }
+
+  // Check for emergency medical symptoms
+  if (
+    qLower.includes('chest pain') ||
+    qLower.includes('shortness of breath') ||
+    qLower.includes('heart attack') ||
+    qLower.includes('stroke') ||
+    qLower.includes('difficulty breathing') ||
+    qLower.includes('severe bleeding') ||
+    qLower.includes('unconscious')
+  ) {
+    return {
+      source: 'clinical-safety-guardrail',
+      answer: `🚨 **EMERGENCY MEDICAL WARNING:**
+
+If you or your loved one are experiencing acute symptoms such as chest pressure, shortness of breath, sudden numbness, or dizziness, **do not wait for an app or online response**. 
+
+**Please call emergency medical services immediately (e.g. 112 / 911 / 102) or go to the nearest hospital emergency room.** Notify an emergency contact from your Care Circle now.`,
+      disclaimer: SAFETY_DISCLAIMER,
+    };
+  }
+
+  // Check for disease diagnosis inquiries
+  if (
+    qLower.includes('diagnose me') ||
+    qLower.includes('what disease do i have') ||
+    qLower.includes('do i have cancer') ||
+    qLower.includes('what is wrong with me')
+  ) {
+    return {
+      source: 'clinical-safety-guardrail',
+      answer: `🛡️ **Medical Disclaimer:** 
+
+SAATHI CARE cannot diagnose illnesses or clinical conditions. Only a licensed physician can perform physical examinations, order diagnostic tests, and make medical diagnoses. Please schedule an appointment with your doctor.`,
+      disclaimer: SAFETY_DISCLAIMER,
+    };
+  }
+
+  // 2. Gemini API Engine (when key is configured)
   if (apiKey) {
     try {
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
@@ -125,21 +192,7 @@ Provide a warm, reassuring answer in plain language (short paragraphs, bullet po
     }
   }
 
-  // Fallback Rule-Based Knowledge Engine
-  const qLower = trimmedQuery.toLowerCase();
-
-  // Check for safety violations in query
-  if (qLower.includes('change dose') || qLower.includes('double dose') || qLower.includes('stop taking') || qLower.includes('new pill')) {
-    return {
-      source: 'rule-engine',
-      answer: `🛡️ **Safety Alert:** Only your prescribing physician or licensed doctor can safely adjust your dosages or change your medications. 
-
-**Critical Rule:** If you missed a dose, **never take a double dose** to make up for it. Please call your doctor's office or speak with your pharmacist directly for personalized advice.`,
-      disclaimer: SAFETY_DISCLAIMER,
-    };
-  }
-
-  // Match against clinical knowledge base
+  // 3. Fallback Rule-Based Knowledge Engine
   let matchedMed = null;
   for (const [key, info] of Object.entries(CLINICAL_KNOWLEDGE_BASE)) {
     if (qLower.includes(key) || qLower.includes(info.name.toLowerCase())) {

@@ -30,12 +30,31 @@ const PORT = process.env.PORT || 5000;
 // Initialize SQLite database
 initDatabase();
 
-// Core Middleware
+// Security: Restrict CORS to explicitly configured trusted origins
+const defaultOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5000',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:5000',
+];
+const envOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map(s => s.trim()).filter(Boolean)
+  : [];
+const allowedOrigins = new Set([...defaultOrigins, ...envOrigins]);
+
 app.use(cors({
-  origin: true,
+  origin: (origin, callback) => {
+    // Allow server-to-server or non-browser tools (curl, postman, test runner) where origin is undefined
+    if (!origin || allowedOrigins.has(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS policy violation: Origin '${origin}' is not allowed`));
+    }
+  },
   credentials: true,
 }));
-app.use(express.json());
+
+app.use(express.json({ limit: '1mb' }));
 app.use('/api', apiRateLimiter);
 
 // Health Check
@@ -71,11 +90,18 @@ if (fs.existsSync(clientDistPath)) {
   });
 }
 
-// Global Error Handler
+// Global Error Handler - Sanitizes error messages to prevent sensitive leaks
 app.use((err, req, res, next) => {
-  console.error('[Unhandled Server Error]:', err);
+  console.error('[Application Error]:', err.message);
+  
+  if (err.message && err.message.includes('CORS policy violation')) {
+    return res.status(403).json({ error: err.message });
+  }
+
   res.status(err.status || 500).json({
-    error: err.message || 'Internal Server Error',
+    error: process.env.NODE_ENV === 'production' 
+      ? 'An unexpected internal error occurred' 
+      : (err.message || 'Internal Server Error'),
   });
 });
 
@@ -88,7 +114,7 @@ const server = app.listen(PORT, () => {
   console.log(`=======================================================`);
 });
 
-// Periodic background escalation check every 10 minutes
+// Reliable background escalation runner every 10 minutes
 const ESCALATION_INTERVAL_MS = 10 * 60 * 1000;
 setInterval(() => {
   checkAndEscalateDoses().catch(err => {

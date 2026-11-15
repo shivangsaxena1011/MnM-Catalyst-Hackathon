@@ -88,6 +88,7 @@ export function initDatabase() {
       meal_timing TEXT DEFAULT 'after_food', -- 'before_food', 'after_food', 'with_food', 'anytime'
       schedule_slots TEXT NOT NULL,   -- JSON array: ["morning", "night"] or ["08:00", "20:00"]
       frequency TEXT DEFAULT 'daily', -- 'daily', 'alternate_days', 'weekly', 'as_needed'
+      custom_time TEXT,               -- e.g. "14:30" (for non-standard custom timing)
       inventory_count INTEGER DEFAULT 30,
       refill_alert_threshold INTEGER DEFAULT 5,
       prescribed_by TEXT,
@@ -195,5 +196,13 @@ export function initDatabase() {
     CREATE INDEX IF NOT EXISTS idx_notifs_user ON notifications(user_id, is_read);
     CREATE INDEX IF NOT EXISTS idx_activities_patient ON activities(patient_id, created_at);
   `);
+
+  // Safe schema migrations for existing databases
+  try {
+    db.exec('ALTER TABLE medications ADD COLUMN custom_time TEXT;');
+  } catch (_) {
+    // Column already exists
+  }
+
   console.log('[Database] Schema verified and initialized successfully.');
 }

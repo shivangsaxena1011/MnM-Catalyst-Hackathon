@@ -2,6 +2,7 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import { db } from '../db/database.js';
 import { requireAuth } from '../middleware/auth.js';
+import { getPatientDateTime } from '../services/escalationService.js';
 
 const router = express.Router();
 
@@ -12,7 +13,8 @@ const router = express.Router();
 router.post('/seed', requireAuth, async (req, res) => {
   try {
     const userId = req.user.id;
-    const today = new Date().toISOString().split('T')[0];
+    const tzInfo = getPatientDateTime('Asia/Kolkata');
+    const today = tzInfo.date;
 
     // Check if user already has a demo profile named "Ramesh Sharma"
     const existing = db.prepare(`

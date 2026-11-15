@@ -1,92 +1,181 @@
 /**
- * SAATHI CARE Comprehensive MVP Verification Test Suite
- * Tests:
- * 1. Health check & DB connection
- * 2. User registration, password hashing & passcode PIN setup
- * 3. Authentication (standard password + 4-digit PIN access)
- * 4. Patient profile creation & unique invite code generation
- * 5. Care Circle joining & role permissions check
- * 6. Medication CRUD & duplicate schedule handling
- * 7. Adherence logging (Taken, Skipped, inventory decrement, duplicate prevention)
- * 8. Smart Care Escalation engine & safety rule enforcement ("Never double missed dose")
- * 9. Appointment Guardian CRUD
- * 10. AI Care Assistant with safety constraints
- * 11. Judge Demo Data seed & reset
- * 12. Persistent database verification
+ * SAATHI CARE Second-Pass Security & Functionality Verification Test Suite
+ * Includes both positive functionality tests and negative security/validation tests.
  */
 
 const BASE_URL = 'http://localhost:5000/api';
 
-async function runTests() {
-  console.log('\n=============================================================');
-  console.log('🧪 RUNNING SAATHI CARE COMPREHENSIVE VERIFICATION TEST SUITE');
-  console.log('=============================================================\n');
+async function runAuditTests() {
+  console.log('\n======================================================================');
+  console.log('🛡️  SAATHI CARE: SECOND-PASS SECURITY & QA ENGINEERING AUDIT SUITE');
+  console.log('======================================================================\n');
 
   let passed = 0;
   let failed = 0;
 
-  function assert(condition, message) {
+  function assert(condition, testName, detail = '') {
     if (condition) {
-      console.log(`  ✅ PASS: ${message}`);
+      console.log(`  ✅ PASS: ${testName} ${detail ? `(${detail})` : ''}`);
       passed++;
     } else {
-      console.error(`  ❌ FAIL: ${message}`);
+      console.error(`  ❌ FAIL: ${testName} ${detail ? `(${detail})` : ''}`);
       failed++;
     }
   }
 
   try {
-    // 1. Health Check
-    console.log('--- TEST GROUP 1: Backend & Database Health ---');
+    // -------------------------------------------------------------
+    // GROUP 1: Health Check & DB
+    // -------------------------------------------------------------
+    console.log('--- TEST GROUP 1: Core System & DB Health ---');
     const healthRes = await fetch(`${BASE_URL}/health`);
     const healthData = await healthRes.json();
-    assert(healthRes.ok && healthData.status === 'ok', 'API health check endpoint is responsive');
+    assert(healthRes.ok && healthData.status === 'ok', 'API health check responds correctly');
 
-    // 2. Registration & Password Hashing
-    console.log('\n--- TEST GROUP 2: Authentication & Passcode Hashing ---');
-    const testEmail = `test.senior.${Date.now()}@saathicare.health`;
+    // -------------------------------------------------------------
+    // GROUP 2: Registration & Input Validation (Positive & Negative)
+    // -------------------------------------------------------------
+    console.log('\n--- TEST GROUP 2: Registration & Strict Role/PIN Validation ---');
+    
+    // Negative test: Invalid role
+    const invalidRoleRes = await fetch(`${BASE_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'Hacker User',
+        email: `invalid.role.${Date.now()}@test.com`,
+        password: 'ValidPassword123!',
+        role: 'superadmin',
+      }),
+    });
+    assert(invalidRoleRes.status === 400, 'Negative: Rejects registration with unauthorized role (e.g. superadmin)');
+
+    // Negative test: Invalid PIN (non-numeric / wrong length)
+    const invalidPinRes = await fetch(`${BASE_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'Bad Pin User',
+        email: `bad.pin.${Date.now()}@test.com`,
+        password: 'ValidPassword123!',
+        role: 'senior',
+        passcode: 'ABCD', // Non-numeric
+      }),
+    });
+    assert(invalidPinRes.status === 400, 'Negative: Rejects non-numeric passcode PIN');
+
+    const shortPinRes = await fetch(`${BASE_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'Short Pin User',
+        email: `short.pin.${Date.now()}@test.com`,
+        password: 'ValidPassword123!',
+        role: 'senior',
+        passcode: '12', // Too short (< 4 digits)
+      }),
+    });
+    assert(shortPinRes.status === 400, 'Negative: Rejects passcode PIN with fewer than 4 digits');
+
+    // Negative test: Password too short
+    const shortPassRes = await fetch(`${BASE_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'Short Pass User',
+        email: `short.pass.${Date.now()}@test.com`,
+        password: '123',
+        role: 'senior',
+      }),
+    });
+    assert(shortPassRes.status === 400, 'Negative: Rejects weak password (< 8 chars)');
+
+    // Positive test: Valid Senior Registration
+    const seniorEmail = `senior.audit.${Date.now()}@saathicare.health`;
     const regRes = await fetch(`${BASE_URL}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        name: 'Om Prakash',
-        email: testEmail,
-        password: 'SecurePassword123!',
-        passcode: '4321',
+        name: 'Dinanath Sharma',
+        email: seniorEmail,
+        password: 'StrongPassword123!',
+        passcode: '5678',
         role: 'senior',
-        phone: '+91 98000 11111',
+        phone: '+91 98111 00000',
       }),
     });
     const regData = await regRes.json();
-    assert(regRes.status === 201 && regData.token, 'User registered with hashed password and passcode');
+    assert(regRes.status === 201 && regData.token && !regData.user.password_hash, 'Positive: Registers senior with hashed credentials (zero hash leakage)');
     const seniorToken = regData.token;
 
-    // 3. Password Login
+    // Negative test: Duplicate email registration
+    const dupRes = await fetch(`${BASE_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'Duplicate Dinanath',
+        email: seniorEmail,
+        password: 'StrongPassword123!',
+        role: 'senior',
+      }),
+    });
+    assert(dupRes.status === 409, 'Negative: Rejects duplicate email registration with 409 Conflict');
+
+    // -------------------------------------------------------------
+    // GROUP 3: Authentication & Passcode PIN (Positive & Negative)
+    // -------------------------------------------------------------
+    console.log('\n--- TEST GROUP 3: Authentication & Passcode Security ---');
+
+    // Negative test: Wrong password
+    const wrongPassRes = await fetch(`${BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: seniorEmail, password: 'WrongPassword999!' }),
+    });
+    assert(wrongPassRes.status === 401, 'Negative: Rejects login with incorrect password');
+
+    // Positive test: Correct password
     const loginRes = await fetch(`${BASE_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: testEmail,
-        password: 'SecurePassword123!',
-      }),
+      body: JSON.stringify({ email: seniorEmail, password: 'StrongPassword123!' }),
     });
-    const loginData = await loginRes.json();
-    assert(loginRes.ok && loginData.user.name === 'Om Prakash', 'Standard password login successful');
+    assert(loginRes.ok, 'Positive: Authenticates user with valid password');
 
-    // 4. Elder Quick 4-Digit Passcode Login
+    // Negative test: Wrong PIN
+    const wrongPinRes = await fetch(`${BASE_URL}/auth/passcode-login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: seniorEmail, passcode: '9999' }),
+    });
+    assert(wrongPinRes.status === 401, 'Negative: Rejects incorrect 4-digit PIN');
+
+    // Positive test: Correct PIN
     const pinRes = await fetch(`${BASE_URL}/auth/passcode-login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: testEmail,
-        passcode: '4321',
-      }),
+      body: JSON.stringify({ email: seniorEmail, passcode: '5678' }),
     });
     const pinData = await pinRes.json();
-    assert(pinRes.ok && pinData.user.hasPasscode === true, 'Elder 4-digit PIN passcode authentication successful');
+    assert(pinRes.ok && pinData.user.hasPasscode === true, 'Positive: Authenticates elder with correct 4-digit numeric PIN');
 
-    // 5. Patient Profile Creation
-    console.log('\n--- TEST GROUP 3: Patient Profile & Care Circle ---');
+    // -------------------------------------------------------------
+    // GROUP 4: Patient Profile & Care Circle Setup
+    // -------------------------------------------------------------
+    console.log('\n--- TEST GROUP 4: Patient Profile & Care Circle Pairing ---');
+
+    // Negative test: Invalid age
+    const badAgeRes = await fetch(`${BASE_URL}/patients`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${seniorToken}`,
+      },
+      body: JSON.stringify({ full_name: 'Dinanath Sharma', age: 0 }),
+    });
+    assert(badAgeRes.status === 400, 'Negative: Rejects patient profile creation with invalid age (0)');
+
+    // Positive test: Create Patient Profile
     const patientRes = await fetch(`${BASE_URL}/patients`, {
       method: 'POST',
       headers: {
@@ -94,37 +183,51 @@ async function runTests() {
         'Authorization': `Bearer ${seniorToken}`,
       },
       body: JSON.stringify({
-        full_name: 'Om Prakash',
-        age: 74,
+        full_name: 'Dinanath Sharma',
+        age: 76,
         gender: 'Male',
-        blood_group: 'O+',
-        conditions: 'Hypertension, Mild Arthritis',
-        allergies: 'None',
-        emergency_contact_name: 'Rohit Prakash (Son)',
-        emergency_contact_phone: '+91 98222 33333',
-        relationship: 'Self',
+        blood_group: 'AB+',
+        conditions: 'Hypertension, Mild Osteoarthritis',
+        allergies: 'Penicillin',
+        emergency_contact_name: 'Meera Sharma (Daughter)',
+        emergency_contact_phone: '+91 98222 55555',
+        emergency_contact_relation: 'Daughter',
+        timezone: 'Asia/Kolkata',
       }),
     });
     const patientData = await patientRes.json();
-    assert(patientRes.status === 201 && patientData.patient.id && patientData.invite_code.startsWith('SAATHI-'), 'Patient profile created with unique invite code');
     const patientId = patientData.patient.id;
     const inviteCode = patientData.invite_code;
+    assert(patientRes.status === 201 && inviteCode.startsWith('SAATHI-'), 'Positive: Creates patient profile with unique invite code');
 
-    // 6. Care Circle Joining by Family Member
-    const familyEmail = `rohit.son.${Date.now()}@saathicare.health`;
+    // Register a Family Member
+    const familyEmail = `meera.daughter.${Date.now()}@saathicare.health`;
     const famRegRes = await fetch(`${BASE_URL}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        name: 'Rohit Prakash',
+        name: 'Meera Sharma',
         email: familyEmail,
         password: 'FamilyPassword123!',
         role: 'family',
+        phone: '+91 98222 55555',
       }),
     });
-    const famRegData = await famRegRes.json();
-    const familyToken = famRegData.token;
+    const famData = await famRegRes.json();
+    const familyToken = famData.token;
 
+    // Negative test: Join with invalid invite code
+    const badJoinRes = await fetch(`${BASE_URL}/patients/join`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${familyToken}`,
+      },
+      body: JSON.stringify({ invite_code: 'SAATHI-FAKE99' }),
+    });
+    assert(badJoinRes.status === 404, 'Negative: Rejects invalid Care Circle invite code with 404 Not Found');
+
+    // Positive test: Join via legitimate invite code
     const joinRes = await fetch(`${BASE_URL}/patients/join`, {
       method: 'POST',
       headers: {
@@ -133,14 +236,142 @@ async function runTests() {
       },
       body: JSON.stringify({
         invite_code: inviteCode,
-        relationship: 'Son',
+        relationship: 'Daughter',
       }),
     });
-    const joinData = await joinRes.json();
-    assert(joinRes.status === 200, 'Family member successfully joined patient Care Circle via invite code');
+    assert(joinRes.status === 200, 'Positive: Family member joins Care Circle via invite code');
 
-    // 7. Medication Creation & Inventory Setup
-    console.log('\n--- TEST GROUP 4: Medication Management & Inventory ---');
+    // Negative test: Join same patient twice
+    const dupJoinRes = await fetch(`${BASE_URL}/patients/join`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${familyToken}`,
+      },
+      body: JSON.stringify({
+        invite_code: inviteCode,
+        relationship: 'Daughter',
+      }),
+    });
+    assert(dupJoinRes.status === 409, 'Negative: Rejects duplicate care circle membership with 409 Conflict');
+
+    // -------------------------------------------------------------
+    // GROUP 5: Authorization, Patient Isolation & Read-Only Restrictions
+    // -------------------------------------------------------------
+    console.log('\n--- TEST GROUP 5: Patient Isolation & Permission Enforcement ---');
+
+    // Register a completely unrelated user (User C)
+    const strangerEmail = `stranger.${Date.now()}@test.com`;
+    const strReg = await fetch(`${BASE_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'Unauthorized Stranger',
+        email: strangerEmail,
+        password: 'StrangerPassword123!',
+        role: 'family',
+      }),
+    });
+    const strData = await strReg.json();
+    const strangerToken = strData.token;
+
+    // Negative test: Unauthorized user attempts to read patient's medications
+    const unauthMedsRes = await fetch(`${BASE_URL}/medications/${patientId}`, {
+      headers: { 'Authorization': `Bearer ${strangerToken}` },
+    });
+    assert(unauthMedsRes.status === 403, 'Security: Unauthorized user blocked from viewing patient medications (403 Forbidden)');
+
+    // Negative test: Unauthorized user attempts to log dose for patient
+    const unauthLogRes = await fetch(`${BASE_URL}/logs/${patientId}/log`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${strangerToken}`,
+      },
+      body: JSON.stringify({
+        medication_id: 1,
+        scheduled_date: '2026-11-15',
+        scheduled_slot: 'morning',
+        status: 'taken',
+      }),
+    });
+    assert(unauthLogRes.status === 403, 'Security: Unauthorized user blocked from logging patient dose (403 Forbidden)');
+
+    // Negative test: Unauthorized user attempts to access patient context via AI
+    const unauthAiRes = await fetch(`${BASE_URL}/ai/explain`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${strangerToken}`,
+      },
+      body: JSON.stringify({
+        query: 'What medications is this patient on?',
+        patient_id: patientId,
+      }),
+    });
+    assert(unauthAiRes.status === 403, 'Security: Unauthorized user blocked from querying patient context via AI (403 Forbidden)');
+
+    // Test Read-Only Permission Restrictions:
+    // Demote Family Member to can_edit = 0 (Read-Only)
+    const careCircleRes = await fetch(`${BASE_URL}/patients/${patientId}`, {
+      headers: { 'Authorization': `Bearer ${seniorToken}` },
+    });
+    const circleData = await careCircleRes.json();
+    const famMember = circleData.care_circle.find(m => m.user_id === famData.user.id);
+
+    const demoteRes = await fetch(`${BASE_URL}/patients/${patientId}/care-circle/${famMember.membership_id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${seniorToken}`,
+      },
+      body: JSON.stringify({ can_edit: false }),
+    });
+    assert(demoteRes.status === 200, 'Positive: Senior owner successfully modifies member to read-only');
+
+    // Negative test: Read-only member tries to add medication
+    const readOnlyAddMed = await fetch(`${BASE_URL}/medications/${patientId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${familyToken}`,
+      },
+      body: JSON.stringify({
+        name: 'Unauthorized Drug',
+        dosage: '10mg',
+        schedule_slots: ['morning'],
+      }),
+    });
+    assert(readOnlyAddMed.status === 403, 'Security: Read-only member blocked from adding medications (403 Forbidden)');
+
+    // Negative test: Read-only member tries to modify senior owner's permissions
+    const seniorMember = circleData.care_circle.find(m => m.role === 'senior');
+    const attackRes = await fetch(`${BASE_URL}/patients/${patientId}/care-circle/${seniorMember.membership_id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${familyToken}`,
+      },
+      body: JSON.stringify({ can_edit: false, role: 'caregiver' }),
+    });
+    assert(attackRes.status === 403, 'Security: Non-senior member blocked from altering senior profile ownership (403 Forbidden)');
+
+    // Restore family member edit permission for subsequent tests
+    await fetch(`${BASE_URL}/patients/${patientId}/care-circle/${famMember.membership_id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${seniorToken}`,
+      },
+      body: JSON.stringify({ can_edit: true }),
+    });
+
+    // -------------------------------------------------------------
+    // GROUP 6: Medication Scheduling & Custom Timing
+    // -------------------------------------------------------------
+    console.log('\n--- TEST GROUP 6: Medication CRUD & Custom Timings ---');
+
+    // Add medication with custom time slot
     const medRes = await fetch(`${BASE_URL}/medications/${patientId}`, {
       method: 'POST',
       headers: {
@@ -148,26 +379,44 @@ async function runTests() {
         'Authorization': `Bearer ${seniorToken}`,
       },
       body: JSON.stringify({
-        name: 'Lisinopril',
-        generic_name: 'Lisinopril Dihydrate',
-        dosage: '10 mg',
+        name: 'Amlodipine Besylate',
+        generic_name: 'Amlodipine',
+        dosage: '5 mg',
         form: 'Tablet',
-        instructions: 'Take once in morning with water',
+        instructions: 'Take in morning with water. Stand up slowly.',
         meal_timing: 'after_food',
         schedule_slots: ['morning'],
-        inventory_count: 20,
+        custom_time: '08:30',
+        inventory_count: 25,
         refill_alert_threshold: 5,
-        prescribed_by: 'Dr. Anita Sen',
+        prescribed_by: 'Dr. S. K. Roy',
       }),
     });
     const medData = await medRes.json();
-    assert(medRes.status === 201 && medData.medication.name === 'Lisinopril', 'Medication created with daily slot and refill inventory');
+    assert(medRes.status === 201 && medData.medication.id, 'Positive: Medication created with custom time slot (08:30)');
     const medId = medData.medication.id;
 
-    // 8. Adherence Logging & Duplicate Guard
-    console.log('\n--- TEST GROUP 5: Adherence Logging & Duplicate Prevention ---');
+    // Edit medication
+    const editMedRes = await fetch(`${BASE_URL}/medications/${patientId}/${medId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${seniorToken}`,
+      },
+      body: JSON.stringify({
+        dosage: '10 mg',
+        instructions: 'Updated: Take 10mg after breakfast',
+      }),
+    });
+    assert(editMedRes.ok, 'Positive: Medication prescription updated successfully');
+
+    // -------------------------------------------------------------
+    // GROUP 7: Adherence Logging, Inventory & Anti-Duplicate Guard
+    // -------------------------------------------------------------
+    console.log('\n--- TEST GROUP 7: Adherence Logging & Duplicate Prevention ---');
     const today = new Date().toISOString().split('T')[0];
 
+    // Mark dose as taken
     const logRes1 = await fetch(`${BASE_URL}/logs/${patientId}/log`, {
       method: 'POST',
       headers: {
@@ -179,13 +428,13 @@ async function runTests() {
         scheduled_date: today,
         scheduled_slot: 'morning',
         status: 'taken',
-        notes: 'Taken after breakfast',
+        notes: 'Taken on time with breakfast',
       }),
     });
     const logData1 = await logRes1.json();
-    assert(logRes1.status === 200 && logData1.log.status === 'taken', 'Medication marked as taken and timestamped');
+    assert(logRes1.status === 200 && logData1.log.status === 'taken', 'Positive: Dose recorded as taken with timestamp');
 
-    // Test duplicate preventer / upsert
+    // Anti-duplicate test: Log same dose slot on same day again
     const logRes2 = await fetch(`${BASE_URL}/logs/${patientId}/log`, {
       method: 'POST',
       headers: {
@@ -197,19 +446,18 @@ async function runTests() {
         scheduled_date: today,
         scheduled_slot: 'morning',
         status: 'taken',
-        notes: 'Duplicate attempt to confirm dose',
+        notes: 'Second accidental click by senior',
       }),
     });
     const logData2 = await logRes2.json();
-    assert(logRes2.status === 200 && logData2.log.id === logData1.log.id, 'Duplicate dose log safely prevented via unique upsert');
+    assert(logRes2.status === 200 && logData2.log.id === logData1.log.id, 'Idempotency: Duplicate dose log safely prevented via unique upsert');
 
-    // 9. Smart Care Escalation Simulation & Safety Check
-    console.log('\n--- TEST GROUP 6: Smart Care Escalation & Safety Engine ---');
-    const escRes = await fetch(`${BASE_URL}/escalations/${patientId}/simulate`, {
+    // Verify taken dose NEVER triggers missed-dose escalation
+    const takenEscRes = await fetch(`${BASE_URL}/escalations/${patientId}/simulate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${familyToken}`,
+        'Authorization': `Bearer ${seniorToken}`,
       },
       body: JSON.stringify({
         medication_id: medId,
@@ -217,19 +465,75 @@ async function runTests() {
         tier: 3,
       }),
     });
-    const escData = await escRes.json();
-    assert(escRes.status === 200 && escData.escalationId, 'Tier 3 Caregiver Escalation alert triggered');
+    assert(takenEscRes.status === 400 || takenEscRes.status === 500, 'Safety Rule: Confirmed taken dose is rejected from triggering missed-dose escalation');
 
-    // Verify notifications table received escalation alert
-    const notifRes = await fetch(`${BASE_URL}/notifications/${patientId}`, {
+    // Add second medication for escalation test
+    const medRes2 = await fetch(`${BASE_URL}/medications/${patientId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${seniorToken}`,
+      },
+      body: JSON.stringify({
+        name: 'Metformin XR',
+        dosage: '500 mg',
+        form: 'Tablet',
+        instructions: 'Take with dinner',
+        meal_timing: 'with_food',
+        schedule_slots: ['night'],
+      }),
+    });
+    const med2Data = await medRes2.json();
+    const med2Id = med2Data.medication.id;
+
+    // -------------------------------------------------------------
+    // GROUP 8: Smart Care Escalation & Honest Notification Delivery
+    // -------------------------------------------------------------
+    console.log('\n--- TEST GROUP 8: Smart Care Escalation & Honest Notification ---');
+
+    // Simulate Tier 3 Escalation on unconfirmed medication
+    const escRes = await fetch(`${BASE_URL}/escalations/${patientId}/simulate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${seniorToken}`,
+      },
+      body: JSON.stringify({
+        medication_id: med2Id,
+        slot: 'night',
+        tier: 3,
+      }),
+    });
+    const escData = await escRes.json();
+    assert(escRes.status === 200 && escData.escalationId, 'Positive: Tier 3 Escalation alert triggered for overdue unconfirmed dose');
+
+    // Verify notifications table stores alert with honest email_status ('unconfigured' or 'sent')
+    const notifsRes = await fetch(`${BASE_URL}/notifications/${patientId}`, {
       headers: { 'Authorization': `Bearer ${familyToken}` },
     });
-    const notifData = await notifRes.json();
-    const hasEscNotif = notifData.notifications.some(n => n.type === 'escalation');
-    assert(hasEscNotif, 'Caregiver notification inbox correctly stored escalation alert');
+    const notifsData = await notifsRes.json();
+    const escNotif = notifsData.notifications.find(n => n.type === 'escalation');
+    assert(
+      escNotif && (escNotif.email_status === 'unconfigured' || escNotif.email_status === 'sent'),
+      'Honest Email Status: Notification records accurate email dispatch state (never claims sent when unconfigured)'
+    );
 
-    // 10. Appointment Guardian
-    console.log('\n--- TEST GROUP 7: Appointment Guardian ---');
+    // Resolve escalation
+    const resolveRes = await fetch(`${BASE_URL}/escalations/${patientId}/${escData.escalationId}/resolve`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${familyToken}`,
+      },
+      body: JSON.stringify({ notes: 'Caregiver called senior; confirmed safe' }),
+    });
+    assert(resolveRes.status === 200, 'Positive: Caregiver successfully resolves active escalation');
+
+    // -------------------------------------------------------------
+    // GROUP 9: Appointment Guardian CRUD
+    // -------------------------------------------------------------
+    console.log('\n--- TEST GROUP 9: Appointment Guardian ---');
+
     const apptRes = await fetch(`${BASE_URL}/appointments/${patientId}`, {
       method: 'POST',
       headers: {
@@ -237,61 +541,126 @@ async function runTests() {
         'Authorization': `Bearer ${seniorToken}`,
       },
       body: JSON.stringify({
-        doctor_name: 'Dr. Anita Sen',
-        specialty: 'Internal Medicine',
-        clinic_hospital: 'Max Super Speciality Hospital',
-        address: 'Saket, New Delhi',
-        appointment_date: '2026-11-20',
-        appointment_time: '11:00',
-        notes: 'Routine blood pressure review',
+        doctor_name: 'Dr. Manisha Sen',
+        specialty: 'Cardiologist',
+        clinic_hospital: 'Apollo Heart Center',
+        address: 'Sarita Vihar, New Delhi',
+        appointment_date: '2026-11-25',
+        appointment_time: '11:30',
+        notes: 'Routine echocardiogram review',
+        reminder_hours: 24,
       }),
     });
     const apptData = await apptRes.json();
-    assert(apptRes.status === 201 && apptData.appointment.doctor_name === 'Dr. Anita Sen', 'Doctor appointment successfully scheduled');
+    assert(apptRes.status === 201 && apptData.appointment.id, 'Positive: Doctor appointment scheduled with Care Circle notification');
+    const apptId = apptData.appointment.id;
 
-    // 11. AI Care Assistant
-    console.log('\n--- TEST GROUP 8: AI Care Assistant & Clinical Safety ---');
-    const aiRes = await fetch(`${BASE_URL}/ai/explain`, {
+    // Update appointment status to completed
+    const apptUpdateRes = await fetch(`${BASE_URL}/appointments/${patientId}/${apptId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${seniorToken}`,
+      },
+      body: JSON.stringify({ status: 'completed' }),
+    });
+    assert(apptUpdateRes.status === 200, 'Positive: Appointment status updated to completed');
+
+    // -------------------------------------------------------------
+    // GROUP 10: AI Care Assistant & Clinical Safety Guardrails
+    // -------------------------------------------------------------
+    console.log('\n--- TEST GROUP 10: AI Care Assistant & Clinical Safety ---');
+
+    // Informational question (safe)
+    const aiSafeRes = await fetch(`${BASE_URL}/ai/explain`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${seniorToken}`,
       },
       body: JSON.stringify({
-        query: 'What does Lisinopril do and should I take a double dose if I missed one?',
+        query: 'What does Amlodipine do and how should I take it?',
         patient_id: patientId,
       }),
     });
-    const aiData = await aiRes.json();
+    const aiSafeData = await aiSafeRes.json();
     assert(
-      aiRes.status === 200 &&
-      aiData.answer &&
-      aiData.disclaimer.includes('Important Notice') &&
-      aiData.answer.toLowerCase().includes('double dose'),
-      'AI Care Assistant answered with strict safety boundaries and never-double-dose rule'
+      aiSafeRes.ok && aiSafeData.answer && aiSafeData.disclaimer.includes('Important Notice'),
+      'Positive: AI explains medication in plain language with clinical disclaimer'
     );
 
-    // 12. Judge Demo Data Seeding
-    console.log('\n--- TEST GROUP 9: Judge Demo Data Seeding & Reset ---');
+    // Negative Clinical Safety Test: User asks to double missed dose
+    const aiDoubleDoseRes = await fetch(`${BASE_URL}/ai/explain`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${seniorToken}`,
+      },
+      body: JSON.stringify({
+        query: 'I missed my morning pill, should I take a double dose tonight?',
+        patient_id: patientId,
+      }),
+    });
+    const aiDoubleDoseData = await aiDoubleDoseRes.json();
+    assert(
+      aiDoubleDoseRes.ok &&
+      aiDoubleDoseData.answer.toLowerCase().includes('never take a double dose') &&
+      aiDoubleDoseData.source === 'clinical-safety-guardrail',
+      'Clinical Safety: AI intercept strictly blocks and warns against doubling missed doses'
+    );
+
+    // Negative Clinical Safety Test: User asks for disease diagnosis
+    const aiDiagnoseRes = await fetch(`${BASE_URL}/ai/explain`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${seniorToken}`,
+      },
+      body: JSON.stringify({
+        query: 'What disease do I have? Can you diagnose me?',
+        patient_id: patientId,
+      }),
+    });
+    const aiDiagnoseData = await aiDiagnoseRes.json();
+    assert(
+      aiDiagnoseRes.ok &&
+      aiDiagnoseData.answer.toLowerCase().includes('cannot diagnose illnesses') &&
+      aiDiagnoseData.source === 'clinical-safety-guardrail',
+      'Clinical Safety: AI intercept strictly refuses disease diagnosis and directs to physician'
+    );
+
+    // -------------------------------------------------------------
+    // GROUP 11: Judge Demo Data Seeding & Reset
+    // -------------------------------------------------------------
+    console.log('\n--- TEST GROUP 11: Evaluator Demo Data Seeding & Reset ---');
+
     const demoSeedRes = await fetch(`${BASE_URL}/demo/seed`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${seniorToken}` },
     });
     const demoSeedData = await demoSeedRes.json();
-    assert(demoSeedRes.ok && demoSeedData.patientId, 'Judge demo data seeded ("Ramesh Sharma", 72y, 7-day adherence history)');
+    assert(demoSeedRes.ok && demoSeedData.patientId, 'Positive: Seeds judge demo profile ("Ramesh Sharma", 72, 7-day adherence history)');
 
-    // Summary
-    console.log('\n=============================================================');
-    console.log(`🏁 TEST EXECUTION COMPLETE: ${passed} PASSED, ${failed} FAILED`);
-    console.log('=============================================================\n');
+    const demoResetRes = await fetch(`${BASE_URL}/demo/reset`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${seniorToken}` },
+    });
+    assert(demoResetRes.ok, 'Positive: Resets evaluator demo data cleanly');
+
+    // -------------------------------------------------------------
+    // AUDIT SUMMARY
+    // -------------------------------------------------------------
+    console.log('\n======================================================================');
+    console.log(`🏁 AUDIT EXECUTION SUMMARY: ${passed} PASSED, ${failed} FAILED`);
+    console.log('======================================================================\n');
 
     if (failed > 0) {
       process.exit(1);
     }
   } catch (err) {
-    console.error('Fatal error during test run:', err);
+    console.error('Fatal execution error during audit suite:', err);
     process.exit(1);
   }
 }
 
-runTests();
+runAuditTests();

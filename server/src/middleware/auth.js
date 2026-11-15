@@ -1,7 +1,20 @@
 import jwt from 'jsonwebtoken';
+import crypto from 'node:crypto';
 import { db } from '../db/database.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'saathi_care_jwt_default_secret_dev_2026';
+// Phase 1 Audit: Remove insecure fallback secrets & enforce >= 32 chars in production
+let JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('CRITICAL SECURITY ERROR: JWT_SECRET environment variable must be configured in production with at least 32 characters');
+  } else {
+    JWT_SECRET = crypto.randomBytes(32).toString('hex');
+    console.warn('[Security Warning] JWT_SECRET unset in development. Generated ephemeral cryptographic instance secret.');
+  }
+} else if (process.env.NODE_ENV === 'production' && JWT_SECRET.length < 32) {
+  throw new Error('CRITICAL SECURITY ERROR: JWT_SECRET must be at least 32 characters in production');
+}
 
 /**
  * Generate JWT token for authenticated user
@@ -26,7 +39,7 @@ export function generateToken(user) {
 export function requireAuth(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Unauthorized: Missing or invalid token' });
+    return res.status(401).json({ error: 'Unauthorized: Missing or invalid authorization token' });
   }
 
   const token = authHeader.split(' ')[1];
@@ -39,7 +52,7 @@ export function requireAuth(req, res, next) {
     req.user = user;
     next();
   } catch (err) {
-    return res.status(401).json({ error: 'Unauthorized: Token expired or invalid' });
+    return res.status(401).json({ error: 'Unauthorized: Token expired, invalid, or signature rejected' });
   }
 }
 
@@ -48,18 +61,20 @@ export function requireAuth(req, res, next) {
  * Attaches req.membership = { patient_id, user_id, role, can_edit, ... }
  */
 export function requirePatientAccess(req, res, next) {
-  const patientId = req.params.patientId || req.body.patient_id || req.query.patient_id;
-  if (!patientId) {
-    return res.status(400).json({ error: 'Bad Request: patient_id is required' });
+  const rawId = req.params.patientId || req.body.patient_id || req.query.patient_id;
+  const patientId = Number(rawId);
+
+  if (!rawId || isNaN(patientId) || patientId <= 0) {
+    return res.status(400).json({ error: 'Bad Request: Valid numeric patient_id is required' });
   }
 
-  // Check if user is in the Care Circle for this patient
+  // Check if user is an active member in the Care Circle for this patient
   const membership = db.prepare(`
-    SELECT cc.*, p.full_name as patient_name, p.invite_code, p.emergency_contact_phone
+    SELECT cc.*, p.full_name as patient_name, p.invite_code, p.emergency_contact_phone, p.timezone, p.senior_user_id
     FROM care_circle cc
     JOIN patients p ON cc.patient_id = p.id
     WHERE cc.patient_id = ? AND cc.user_id = ?
-  `).get(Number(patientId), req.user.id);
+  `).get(patientId, req.user.id);
 
   if (!membership) {
     return res.status(403).json({ error: 'Forbidden: You do not have access to this patient profile' });
@@ -77,8 +92,10 @@ export function requireEditPermission(req, res, next) {
     return res.status(500).json({ error: 'Internal Error: Patient access must be verified first' });
   }
 
-  if (req.membership.can_edit !== 1) {
-    return res.status(403).json({ error: 'Forbidden: You have view-only access to this patient profile' });
+  // Senior profile owner or members with explicit edit permissions
+  const isSeniorOwner = req.membership.role === 'senior' || req.membership.senior_user_id === req.user.id;
+  if (!isSeniorOwner && req.membership.can_edit !== 1) {
+    return res.status(403).json({ error: 'Forbidden: You have view-only access to this patient profile. Contact the primary care circle owner to request edit permissions.' });
   }
 
   next();

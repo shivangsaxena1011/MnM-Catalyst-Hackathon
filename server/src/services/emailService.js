@@ -47,8 +47,12 @@ export async function sendNotificationEmail({ to, subject, htmlContent, textFall
     return { success: false, status: 'failed', error: 'No recipient email provided' };
   }
 
+  // Security: Sanitize subject and recipient to prevent CRLF injection
+  const safeSubject = String(subject).replace(/[\r\n]+/g, ' ');
+  const safeTo = String(to).replace(/[\r\n]+/g, ' ').trim();
+
   if (!isSmtpConfigured() || !transporter) {
-    console.log(`[EmailService - Simulation] Unconfigured SMTP. Simulated email to: ${to} | Subject: "${subject}"`);
+    console.log(`[EmailService - Simulation] Unconfigured SMTP. Simulated email to: ${safeTo} | Subject: "${safeSubject}"`);
     return {
       success: true,
       status: 'unconfigured',
@@ -59,9 +63,9 @@ export async function sendNotificationEmail({ to, subject, htmlContent, textFall
   try {
     const info = await transporter.sendMail({
       from: SMTP_FROM,
-      to,
-      subject,
-      text: textFallback || subject,
+      to: safeTo,
+      subject: safeSubject,
+      text: textFallback || safeSubject,
       html: htmlContent,
     });
 
