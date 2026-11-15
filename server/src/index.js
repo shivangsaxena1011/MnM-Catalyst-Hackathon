@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -34,34 +35,53 @@ const PORT = process.env.PORT || 5000;
 // Initialize SQLite database
 initDatabase();
 
-// Security: Restrict CORS to explicitly configured trusted origins
-const defaultOrigins = [
-  'http://localhost:5173',
-  'http://localhost:5000',
-  'http://127.0.0.1:5173',
-  'http://127.0.0.1:5000',
-];
-if (process.env.RENDER_EXTERNAL_URL) {
-  defaultOrigins.push(process.env.RENDER_EXTERNAL_URL);
+// 1. Content Security Policy & Security Headers via Helmet
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+        imgSrc: ["'self'", 'data:', 'blob:'],
+        connectSrc: ["'self'", 'https://generativelanguage.googleapis.com'],
+        workerSrc: ["'self'", 'blob:'],
+        childSrc: ["'self'", 'blob:'],
+        objectSrc: ["'none'"],
+        baseUri: ["'self'"],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+  })
+);
+
+// 2. Strict CORS Configuration: Exact-match Set
+const allowedOrigins = new Set();
+if (process.env.ALLOWED_ORIGINS) {
+  process.env.ALLOWED_ORIGINS.split(',').map(s => s.trim()).filter(Boolean).forEach(o => allowedOrigins.add(o));
 }
-const envOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(',').map(s => s.trim()).filter(Boolean)
-  : [];
-const allowedOrigins = new Set([...defaultOrigins, ...envOrigins]);
+if (process.env.RENDER_EXTERNAL_URL) {
+  allowedOrigins.add(process.env.RENDER_EXTERNAL_URL.trim());
+}
+if (process.env.NODE_ENV !== 'production') {
+  allowedOrigins.add('http://localhost:5173');
+  allowedOrigins.add('http://localhost:5000');
+  allowedOrigins.add('http://127.0.0.1:5173');
+  allowedOrigins.add('http://127.0.0.1:5000');
+  if (process.env.PORT) {
+    allowedOrigins.add(`http://localhost:${process.env.PORT}`);
+    allowedOrigins.add(`http://127.0.0.1:${process.env.PORT}`);
+  }
+}
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow server-to-server, curl, mobile apps or same-origin where origin is undefined
+    // Allow non-browser agents, curl, mobile, or same-origin requests with no Origin header
     if (!origin) {
       return callback(null, true);
     }
-    // Allow explicitly configured origins or any *.onrender.com deployment
-    if (
-      allowedOrigins.has(origin) ||
-      origin.endsWith('.onrender.com') ||
-      origin.includes('localhost') ||
-      origin.includes('127.0.0.1')
-    ) {
+    if (allowedOrigins.has(origin)) {
       return callback(null, true);
     }
     callback(new Error(`CORS policy violation: Origin '${origin}' is not allowed`));

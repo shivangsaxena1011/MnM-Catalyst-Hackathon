@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { Sparkles, X, Send, ShieldAlert } from 'lucide-react';
+import { getErrorMessage } from '../utils/error';
 
 interface AiAssistantModalProps {
   isOpen: boolean;
@@ -19,6 +20,24 @@ export const AiAssistantModal: React.FC<AiAssistantModalProps> = ({ isOpen, onCl
     disclaimer: string;
   } | null>(null);
 
+  const prevFocusedElem = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      prevFocusedElem.current = document.activeElement as HTMLElement | null;
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          onClose();
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+        prevFocusedElem.current?.focus?.();
+      };
+    }
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const handleAsk = async (questionText?: string) => {
@@ -33,8 +52,8 @@ export const AiAssistantModal: React.FC<AiAssistantModalProps> = ({ isOpen, onCl
         patient_id: activePatient?.id,
       });
       setResponse(res);
-    } catch (err: any) {
-      alert(err.message || 'Failed to get answer from AI Assistant');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to get answer from AI Assistant'));
     } finally {
       setLoading(false);
     }
@@ -50,6 +69,9 @@ export const AiAssistantModal: React.FC<AiAssistantModalProps> = ({ isOpen, onCl
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-md overflow-y-auto">
       <motion.div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="ai-modal-title"
         initial={{ opacity: 0, scale: 0.94, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.94 }}
@@ -57,8 +79,9 @@ export const AiAssistantModal: React.FC<AiAssistantModalProps> = ({ isOpen, onCl
         className="glass-card max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative my-8 bg-white/95"
       >
         <button
+          type="button"
           onClick={onClose}
-          aria-label="Close modal"
+          aria-label="Close AI assistant modal"
           className="absolute top-5 right-5 text-slate-400 hover:text-slate-800 p-1.5 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
         >
           <X className="w-5 h-5" />
@@ -70,7 +93,7 @@ export const AiAssistantModal: React.FC<AiAssistantModalProps> = ({ isOpen, onCl
             <Sparkles className="w-6 h-6 text-amber-200" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2 font-serif">
+            <h3 id="ai-modal-title" className="text-xl font-bold text-slate-900 flex items-center gap-2 font-serif">
               <span>SAATHI AI Care Assistant</span>
               <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full border border-emerald-300">
                 Safety Verified
@@ -118,7 +141,9 @@ export const AiAssistantModal: React.FC<AiAssistantModalProps> = ({ isOpen, onCl
           }}
           className="flex items-center space-x-2 mb-5"
         >
+          <label htmlFor="ai-query-input" className="sr-only">Ask a question about your medication</label>
           <input
+            id="ai-query-input"
             type="text"
             value={query}
             onChange={e => setQuery(e.target.value)}
@@ -127,6 +152,7 @@ export const AiAssistantModal: React.FC<AiAssistantModalProps> = ({ isOpen, onCl
           />
           <button
             type="submit"
+            aria-label="Send question to AI assistant"
             disabled={loading || !query.trim()}
             className="px-5 py-3 rounded-2xl signature-btn text-white font-bold text-sm shadow-md transition-all flex items-center space-x-2 cursor-pointer disabled:opacity-50"
           >

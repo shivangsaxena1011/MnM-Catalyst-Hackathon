@@ -1,6 +1,7 @@
 import React, { Suspense, lazy, useState } from 'react';
 import { motion } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
+import { getErrorMessage } from '../utils/error';
 import {
   ShieldCheck, Users, Pill, Clock, Sparkles,
   ArrowRight, CheckCircle2, ChevronRight, Volume2,
@@ -22,8 +23,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
     setDemoLoading(true);
     try {
       await loginAsGuest();
-    } catch (err: any) {
-      alert(err.message || 'Failed to start demo');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to start demo'));
       setDemoLoading(false);
     }
   };

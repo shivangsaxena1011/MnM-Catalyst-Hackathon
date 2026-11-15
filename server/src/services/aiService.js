@@ -73,7 +73,15 @@ const CLINICAL_KNOWLEDGE_BASE = {
 };
 
 /**
- * Main AI Care Assistant function
+ * Explains medication instructions in plain, compassionate language for seniors and families.
+ * Strictly adheres to clinical safety: pre-emptively intercepts and refuses double-dose queries,
+ * dosage adjustments, emergency symptoms, and medical diagnoses.
+ * 
+ * @param {Object} params
+ * @param {string} params.query - The user's question or prompt
+ * @param {Array<{name: string, dosage?: string, instructions?: string}>} [params.medicationList=[]] - Active medication regimen
+ * @param {string} [params.patientConditions=''] - Clinical conditions for contextual advice
+ * @returns {Promise<{source: string, answer: string, disclaimer: string}>}
  */
 export async function explainMedication({ query, medicationList = [], patientConditions = '' }) {
   const apiKey = process.env.GEMINI_API_KEY;

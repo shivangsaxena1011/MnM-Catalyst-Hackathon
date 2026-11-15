@@ -58,7 +58,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAi, onNavigate, currentPag
           {user && activePatient && (
             <div className="relative">
               <button
+                type="button"
                 onClick={() => setPatientMenuOpen(!patientMenuOpen)}
+                aria-label="Select active patient profile"
+                aria-expanded={patientMenuOpen}
+                aria-haspopup="true"
                 className="flex items-center space-x-2.5 px-3.5 py-1.5 rounded-2xl border border-amber-200/80 bg-white/90 hover:bg-amber-50/50 transition-all text-sm text-slate-800 font-medium shadow-2xs cursor-pointer"
               >
                 <div className="w-7 h-7 rounded-xl signature-gradient text-white flex items-center justify-center font-bold text-xs shadow-xs">
@@ -148,7 +152,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAi, onNavigate, currentPag
             {/* Notification Bell with pulse badge */}
             {user && (
               <button
+                type="button"
                 onClick={() => onNavigate('notifications')}
+                aria-label={`Alerts and notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ''}`}
                 className="relative p-2 rounded-2xl text-slate-600 hover:text-slate-900 hover:bg-white/80 border border-transparent hover:border-amber-200 transition-all cursor-pointer"
                 title="Alerts & Notices"
               >
@@ -171,7 +177,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAi, onNavigate, currentPag
                   </div>
                 </div>
                 <button
+                  type="button"
                   onClick={logout}
+                  aria-label="Sign out of account"
                   title="Sign out"
                   className="p-2 rounded-2xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
                 >

@@ -1,6 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { KeyRound, Mail, Lock, User, ArrowLeft, Shield, CheckCircle2, Pill, Heart } from 'lucide-react';
+import { UserRole } from '../types';
+import { getErrorMessage } from '../utils/error';
 
 interface AuthPageProps {
   onBack: () => void;
@@ -18,8 +20,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onBack, onSuccess }) => {
     try {
       await loginAsGuest();
       onSuccess();
-    } catch (err: any) {
-      setError(err.message || 'Failed to start demo');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to start demo'));
       setGuestLoading(false);
     }
   };
@@ -30,7 +32,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onBack, onSuccess }) => {
   const [passcode, setPasscode] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [role, setRole] = useState<'senior' | 'family' | 'caregiver'>('senior');
+  const [role, setRole] = useState<UserRole>('senior');
 
   // 4-Digit PIN individual boxes
   const [pinDigits, setPinDigits] = useState(['', '', '', '']);
@@ -71,8 +73,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onBack, onSuccess }) => {
     try {
       await login({ email, password });
       onSuccess();
-    } catch (err: any) {
-      setError(err.message || 'Login failed. Please check your credentials.');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Login failed. Please check your credentials.'));
     } finally {
       setLoading(false);
     }
@@ -86,8 +88,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onBack, onSuccess }) => {
       const pinToUse = passcode || pinDigits.join('');
       await passcodeLogin({ email, passcode: pinToUse });
       onSuccess();
-    } catch (err: any) {
-      setError(err.message || 'Passcode verification failed.');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Passcode verification failed.'));
     } finally {
       setLoading(false);
     }
@@ -107,8 +109,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onBack, onSuccess }) => {
         phone: phone || undefined,
       });
       onSuccess();
-    } catch (err: any) {
-      setError(err.message || 'Registration failed.');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Registration failed.'));
     } finally {
       setLoading(false);
     }
@@ -348,7 +350,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onBack, onSuccess }) => {
                   <label className="block text-xs font-bold text-slate-700 mb-1">Account Role</label>
                   <select
                     value={role}
-                    onChange={e => setRole(e.target.value as any)}
+                    onChange={e => setRole(e.target.value as UserRole)}
                     className="w-full px-3.5 py-2 rounded-2xl border border-slate-200 text-sm bg-white font-medium"
                   >
                     <option value="senior">Senior (Managing my own care)</option>

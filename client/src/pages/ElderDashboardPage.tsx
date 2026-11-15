@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useElderMode } from '../context/ElderModeContext';
 import { api } from '../api/client';
 import { MedicationLog } from '../types';
+import { getErrorMessage } from '../utils/error';
 import {
   Volume2, Check, X, PhoneCall, Heart,
   ShieldCheck, Clock, Utensils
@@ -79,8 +80,8 @@ export const ElderDashboardPage: React.FC<ElderDashboardPageProps> = ({ onBackTo
       setActionMessage(`✅ Confirmed: ${currentDose.medication_name} recorded as taken!`);
       setTimeout(() => setActionMessage(null), 4000);
       await loadSchedule();
-    } catch (err: any) {
-      alert(err.message || 'Failed to record dose');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to record dose'));
     }
   };
 
@@ -100,8 +101,8 @@ export const ElderDashboardPage: React.FC<ElderDashboardPageProps> = ({ onBackTo
       setActionMessage(`⚠️ Marked as skipped. Remember: Never double your next dose.`);
       setTimeout(() => setActionMessage(null), 4000);
       await loadSchedule();
-    } catch (err: any) {
-      alert(err.message || 'Failed to record dose');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to record dose'));
     }
   };
 
@@ -128,7 +129,11 @@ export const ElderDashboardPage: React.FC<ElderDashboardPageProps> = ({ onBackTo
       </div>
 
       {actionMessage && (
-        <div className="p-5 rounded-2xl bg-emerald-100 border-3 border-emerald-500 text-emerald-950 text-xl font-black text-center shadow-md">
+        <div
+          role="status"
+          aria-live="polite"
+          className="p-5 rounded-2xl bg-emerald-100 border-3 border-emerald-500 text-emerald-950 text-xl font-black text-center shadow-md"
+        >
           {actionMessage}
         </div>
       )}

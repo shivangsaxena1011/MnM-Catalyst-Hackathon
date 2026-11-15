@@ -3,7 +3,7 @@
  * Includes both positive functionality tests and negative security/validation tests.
  */
 
-const BASE_URL = 'http://localhost:5000/api';
+const BASE_URL = process.env.BASE_URL || 'http://localhost:5000/api';
 
 async function runAuditTests() {
   console.log('\n======================================================================');

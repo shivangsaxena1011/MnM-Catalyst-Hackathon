@@ -5,7 +5,7 @@
 [![Platform](https://img.shields.io/badge/Platform-Web%20%7C%20Mobile%20Responsive-0F172A?style=for-the-badge)](#)
 [![Stack](https://img.shields.io/badge/Stack-React%2019%20%2B%20TypeScript%20%2B%20Node%20%2B%20SQLite-0B1E33?style=for-the-badge)](#)
 [![Security](https://img.shields.io/badge/Security-bcrypt%20Passcode%20%2B%20Rate%20Limiting-059669?style=for-the-badge)](#)
-[![Design](https://img.shields.io/badge/Accessibility-WCAG%20AA%20%2B%20Web%20Speech%20API-D97706?style=for-the-badge)](#)
+[![Design](https://img.shields.io/badge/Accessibility-Accessibility--first%20%2B%20Web%20Speech%20API-D97706?style=for-the-badge)](#)
 
 ---
 
@@ -29,6 +29,21 @@ Traditional medication apps are built for tech-savvy young adults—they rely on
 - **Upcoming-Dose Early Warning:** Proactive 15-minute advance email reminders ensuring seniors take medications on schedule with food.
 - **Clinical AI Care Guide:** Safety-constrained medical explanation powered by Gemini and a deterministic clinical knowledge engine.
 - **Clinical Safety Manifesto:** Strict adherence to patient safety: **Never recommend doubling a missed dose!**
+
+---
+
+## 🎯 Challenge Requirement → Implementation Mapping
+
+| Hackathon Requirement | Feature Implemented | Codebase & Component Location |
+| :--- | :--- | :--- |
+| **Secure passcode-based access** | 4–6 digit bcrypt-hashed numeric PIN with brute-force rate limiting + unique Care Circle invite codes | [`server/src/routes/auth.js`](file:///server/src/routes/auth.js), [`server/src/routes/patients.js`](file:///server/src/routes/patients.js), [`client/src/pages/AuthPage.tsx`](file:///client/src/pages/AuthPage.tsx) |
+| **Shared ecosystem: elder, caretakers, family** | Care Circle model with granular role-based privileges (`can_edit = 1` vs read-only) & multi-tenant isolation | [`server/src/middleware/auth.js`](file:///server/src/middleware/auth.js), [`client/src/pages/CareCirclePage.tsx`](file:///client/src/pages/CareCirclePage.tsx) |
+| **View/add/edit/manage medication schedules** | Prescriptions with multi-slot times (morning/night/custom HH:MM), instructions, meal timing & stock counts | [`server/src/routes/medications.js`](file:///server/src/routes/medications.js), [`client/src/pages/MedicationsPage.tsx`](file:///client/src/pages/MedicationsPage.tsx), [`AddMedicationModal.tsx`](file:///client/src/components/AddMedicationModal.tsx) |
+| **Track adherence** | Idempotent daily dose confirmation, skip logging with clinical reasons, SVG adherence ring & 7-day trend chart | [`server/src/routes/logs.js`](file:///server/src/routes/logs.js), [`client/src/pages/HistoryPage.tsx`](file:///client/src/pages/HistoryPage.tsx), [`client/src/pages/DashboardPage.tsx`](file:///client/src/pages/DashboardPage.tsx) |
+| **Upcoming doctor appointments** | Appointment Guardian tracking specialty, doctor, clinic/hospital, address, notes, and countdown timer | [`server/src/routes/appointments.js`](file:///server/src/routes/appointments.js), [`client/src/pages/AppointmentsPage.tsx`](file:///client/src/pages/AppointmentsPage.tsx), [`AddAppointmentModal.tsx`](file:///client/src/components/AddAppointmentModal.tsx) |
+| **Email reminders: missed doses, upcoming doses, appointments** | 10-minute autonomous background worker dispatching 24h appointment alerts, 15m upcoming dose warnings, and overdue escalations | [`server/src/services/escalationService.js`](file:///server/src/services/escalationService.js), [`server/src/services/emailService.js`](file:///server/src/services/emailService.js), [`server/src/index.js`](file:///server/src/index.js) |
+| **Beyond basic reminders** | Autonomous 3-tier caregiver escalation, AI explainer with strict safety guardrails, low-stock refill warning meters, Elder Mode + read-aloud, and 1-click judge demo | [`server/src/services/aiService.js`](file:///server/src/services/aiService.js), [`server/src/routes/demo.js`](file:///server/src/routes/demo.js), [`client/src/pages/ElderDashboardPage.tsx`](file:///client/src/pages/ElderDashboardPage.tsx) |
+| **Elder at the centre** | Dedicated high-contrast Elder Mode, Web Speech API audio narration, 84px single-tap buttons, senior-owned profile & member permission control | [`client/src/pages/ElderDashboardPage.tsx`](file:///client/src/pages/ElderDashboardPage.tsx), [`client/src/context/ElderModeContext.tsx`](file:///client/src/context/ElderModeContext.tsx) |
 
 ---
 
@@ -92,13 +107,13 @@ Traditional medication apps are built for tech-savvy young adults—they rely on
 | **Styling & Theme** | **Tailwind CSS v4** (`@theme`) | Warm cream palette (`#FFF8F1`), Fraunces serif + Plus Jakarta Sans typography, glassmorphism (`backdrop-blur-md`) |
 | **3D Graphics** | **Three.js**, **@react-three/fiber**, **@react-three/drei** | Procedural 3D heart orb, floating capsules, pointer parallax, lazy-loaded chunk |
 | **Animation** | **Motion (`motion/react`)**, **Canvas-Confetti** | Spring modal entrances, smooth layout transitions, dose completion confetti burst |
-| **Backend API** | **Node.js (v24+)**, **Express.js** | RESTful modular architecture, ES Modules, centralized error handling |
-| **Database** | **SQLite (`node:sqlite` DatabaseSync)** | Zero-dependency native SQLite, atomic transactions, persistent storage on Render disk |
+| **Backend API** | **Node.js (v24+)**, **Express.js** | RESTful modular architecture, ES Modules, Helmet CSP, centralized error handling |
+| **Database** | **SQLite (`node:sqlite` DatabaseSync)** | Zero-dependency native SQLite, atomic transactions (ephemeral on free tier; demo data re-created on demand via Try Live Demo) |
 | **Security & Auth** | **bcryptjs**, **jsonwebtoken (JWT)** | Salted hashing for passwords & 4-digit PINs, tamper-proof bearer tokens |
 | **Rate Limiting** | **express-rate-limit** | Brute-force defense on auth and passcode verification endpoints |
 | **Notifications** | **Nodemailer** + Simulated Fallback | Transactional emails for upcoming doses, appointment reminders, and escalations |
 | **AI Integration** | **Google Gemini API** + Clinical Rules | Multimodal/generative guidance with strict clinical safety fallback engine |
-| **Cloud Hosting** | **Render (Web Service + Persistent Disk)** | Production deployment at `https://saathi-care-41gq.onrender.com` |
+| **Cloud Hosting** | **Render (Web Service)** | Production deployment at `https://saathi-care-41gq.onrender.com` (free plan; demo data created via Try Live Demo) |
 
 ---
 
@@ -170,6 +185,26 @@ The platform includes an automated 14-point end-to-end verification suite (`serv
 🏁 TEST EXECUTION COMPLETE: 14 PASSED, 0 FAILED
 =============================================================
 ```
+
+---
+
+## 🧪 How to Test Locally & Verify
+
+```bash
+# 1. Install all dependencies (both root, server, and client)
+npm run install:all
+
+# 2. Run the complete automated test suite (unit tests + self-starting integration tests)
+npm test
+
+# 3. Build the frontend for production
+npm run build
+
+# 4. Start the production server
+npm start
+```
+
+**Online Evaluation:** Alternatively, open **[https://saathi-care-41gq.onrender.com](https://saathi-care-41gq.onrender.com)** and click **"✨ Try Live Demo — no signup"** to evaluate the platform instantly.
 
 ---
 

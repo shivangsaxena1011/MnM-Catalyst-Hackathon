@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import { getErrorMessage } from '../utils/error';
 import { UserPlus, KeyRound, ArrowLeft, Heart, CheckCircle2 } from 'lucide-react';
 
 interface OnboardingPageProps {
@@ -55,8 +56,8 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onBack, onSucces
       });
       await refreshPatients();
       onSuccess();
-    } catch (err: any) {
-      setError(err.message || 'Failed to create patient profile');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to create patient profile'));
     } finally {
       setLoading(false);
     }
@@ -78,8 +79,8 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onBack, onSucces
       });
       await refreshPatients();
       onSuccess();
-    } catch (err: any) {
-      setError(err.message || 'Failed to join Care Circle');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to join Care Circle'));
     } finally {
       setLoading(false);
     }

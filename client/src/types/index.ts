@@ -46,6 +46,8 @@ export interface CareCircleMember {
 
 export type MedicationSlot = 'morning' | 'afternoon' | 'evening' | 'night' | string;
 
+export type MealTiming = 'before_food' | 'after_food' | 'with_food' | 'anytime';
+
 export interface Medication {
   id: number;
   patient_id: number;
@@ -54,7 +56,7 @@ export interface Medication {
   dosage: string;
   form: string;
   instructions?: string | null;
-  meal_timing: 'before_food' | 'after_food' | 'with_food' | 'anytime';
+  meal_timing: MealTiming;
   schedule_slots: MedicationSlot[];
   frequency: string;
   inventory_count: number;

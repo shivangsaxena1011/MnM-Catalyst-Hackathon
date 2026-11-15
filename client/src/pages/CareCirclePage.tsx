@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api/client';
 import { CareCircleMember } from '../types';
+import { getErrorMessage } from '../utils/error';
 import {
   Users, Copy, Check, Shield, UserCheck,
   UserX, Phone, Mail, Sparkles, KeyRound
@@ -44,8 +45,8 @@ export const CareCirclePage: React.FC = () => {
         can_edit: !member.can_edit,
       });
       await loadCareCircle();
-    } catch (err: any) {
-      alert(err.message || 'Failed to update permissions');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to update permissions'));
     }
   };
 
@@ -55,8 +56,8 @@ export const CareCirclePage: React.FC = () => {
     try {
       await api.patients.removeMember(activePatient.id, member.membership_id);
       await loadCareCircle();
-    } catch (err: any) {
-      alert(err.message || 'Failed to remove member');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to remove member'));
     }
   };
 

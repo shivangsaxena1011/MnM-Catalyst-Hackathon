@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../api/client';
 import { NotificationItem } from '../types';
 import { parseServerDate } from '../utils/date';
+import { getErrorMessage } from '../utils/error';
 import {
   Bell, ShieldAlert, CheckCircle2, Clock, Mail,
   AlertTriangle, PlayCircle, CheckCheck
@@ -38,8 +39,8 @@ export const NotificationsPage: React.FC = () => {
     try {
       await api.notifications.markRead(activePatient.id, notifId);
       setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, is_read: 1 } : n));
-    } catch (err: any) {
-      alert(err.message || 'Failed to update notification');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to update notification'));
     }
   };
 
@@ -48,8 +49,8 @@ export const NotificationsPage: React.FC = () => {
     try {
       await api.notifications.markAllRead(activePatient.id);
       setNotifications(prev => prev.map(n => ({ ...n, is_read: 1 })));
-    } catch (err: any) {
-      alert(err.message || 'Failed to mark all as read');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to mark all as read'));
     }
   };
 
@@ -60,8 +61,8 @@ export const NotificationsPage: React.FC = () => {
       await api.escalations.simulate(activePatient.id, { slot: 'morning', tier: 3 });
       await loadNotifications();
       alert('Simulated Tier 3 Caregiver Escalation dispatched. Check the alert banner and notifications list below.');
-    } catch (err: any) {
-      alert(err.message || 'Failed to simulate escalation');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to simulate escalation'));
     } finally {
       setSimulating(false);
     }

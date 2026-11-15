@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { MedicationLog } from '../types';
 import { Check, X, ShieldAlert, Pill, Clock } from 'lucide-react';
+import { getErrorMessage } from '../utils/error';
 
 interface DoseActionModalProps {
   item: MedicationLog | null;
@@ -15,6 +16,24 @@ export const DoseActionModal: React.FC<DoseActionModalProps> = ({ item, onClose,
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  const prevFocusedElem = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (item) {
+      prevFocusedElem.current = document.activeElement as HTMLElement | null;
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          onClose();
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+        prevFocusedElem.current?.focus?.();
+      };
+    }
+  }, [item, onClose]);
+
   if (!item) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -23,8 +42,8 @@ export const DoseActionModal: React.FC<DoseActionModalProps> = ({ item, onClose,
     try {
       await onConfirm(mode, skippedReason, notes);
       onClose();
-    } catch (err: any) {
-      alert(err.message || 'Failed to update dose');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to update dose'));
     } finally {
       setSubmitting(false);
     }
@@ -33,6 +52,9 @@ export const DoseActionModal: React.FC<DoseActionModalProps> = ({ item, onClose,
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-md">
       <motion.div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="dose-modal-title"
         initial={{ opacity: 0, scale: 0.94, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.94 }}
@@ -40,8 +62,9 @@ export const DoseActionModal: React.FC<DoseActionModalProps> = ({ item, onClose,
         className="glass-card max-w-md w-full p-6 sm:p-7 shadow-2xl relative bg-white/95"
       >
         <button
+          type="button"
           onClick={onClose}
-          aria-label="Close modal"
+          aria-label="Close dose confirmation modal"
           className="absolute top-5 right-5 text-slate-400 hover:text-slate-800 p-1.5 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
         >
           <X className="w-5 h-5" />
@@ -53,7 +76,7 @@ export const DoseActionModal: React.FC<DoseActionModalProps> = ({ item, onClose,
             <Pill className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-slate-900 leading-tight font-serif">{item.medication_name}</h3>
+            <h3 id="dose-modal-title" className="text-xl font-bold text-slate-900 leading-tight font-serif">{item.medication_name}</h3>
             <p className="text-xs text-slate-500 font-medium">
               {item.dosage} • {item.form || 'Tablet'} • {item.scheduled_slot.toUpperCase()}
             </p>
@@ -76,9 +99,10 @@ export const DoseActionModal: React.FC<DoseActionModalProps> = ({ item, onClose,
         )}
 
         {/* Status Selection Switch */}
-        <div className="grid grid-cols-2 gap-2 p-1.5 bg-amber-50/80 rounded-2xl mb-5 border border-amber-200/60">
+        <div className="grid grid-cols-2 gap-2 p-1.5 bg-amber-50/80 rounded-2xl mb-5 border border-amber-200/60" role="group" aria-label="Dose status choice">
           <button
             type="button"
+            aria-pressed={mode === 'taken'}
             onClick={() => setMode('taken')}
             className={`py-2.5 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition-all cursor-pointer ${
               mode === 'taken'
@@ -91,6 +115,7 @@ export const DoseActionModal: React.FC<DoseActionModalProps> = ({ item, onClose,
           </button>
           <button
             type="button"
+            aria-pressed={mode === 'skipped'}
             onClick={() => setMode('skipped')}
             className={`py-2.5 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition-all cursor-pointer ${
               mode === 'skipped'
@@ -106,10 +131,11 @@ export const DoseActionModal: React.FC<DoseActionModalProps> = ({ item, onClose,
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === 'skipped' ? (
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">
+              <label htmlFor="skipped-reason-select" className="block text-xs font-bold text-slate-700 mb-1.5">
                 Reason for skipping (recommended)
               </label>
               <select
+                id="skipped-reason-select"
                 value={skippedReason}
                 onChange={e => setSkippedReason(e.target.value)}
                 className="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 bg-white text-xs font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
@@ -132,10 +158,11 @@ export const DoseActionModal: React.FC<DoseActionModalProps> = ({ item, onClose,
             </div>
           ) : (
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">
+              <label htmlFor="taken-notes-input" className="block text-xs font-bold text-slate-700 mb-1.5">
                 Optional Note (e.g. "Taken with warm water after breakfast")
               </label>
               <input
+                id="taken-notes-input"
                 type="text"
                 value={notes}
                 onChange={e => setNotes(e.target.value)}

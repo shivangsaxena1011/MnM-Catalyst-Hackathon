@@ -1,6 +1,7 @@
 import express from 'express';
 import { db } from '../db/database.js';
 import { requireAuth, requirePatientAccess, requireEditPermission } from '../middleware/auth.js';
+import { parseScheduleSlots } from '../utils/schedule.js';
 
 const router = express.Router();
 
@@ -16,15 +17,10 @@ router.get('/:patientId', requireAuth, requirePatientAccess, (req, res) => {
     `).all(req.params.patientId);
 
     // Parse schedule_slots from JSON string
-    const formatted = meds.map(m => {
-      let slots = [];
-      try {
-        slots = JSON.parse(m.schedule_slots);
-      } catch {
-        slots = [m.schedule_slots];
-      }
-      return { ...m, schedule_slots: slots };
-    });
+    const formatted = meds.map(m => ({
+      ...m,
+      schedule_slots: parseScheduleSlots(m.schedule_slots),
+    }));
 
     return res.json({ medications: formatted });
   } catch (err) {
@@ -55,6 +51,22 @@ router.post('/:patientId', requireAuth, requirePatientAccess, requireEditPermiss
 
     if (!name || typeof name !== 'string' || !name.trim() || !dosage || typeof dosage !== 'string' || !dosage.trim()) {
       return res.status(400).json({ error: 'Medication name and dosage are required' });
+    }
+
+    if (name.trim().length > 100) {
+      return res.status(400).json({ error: 'Medication name must not exceed 100 characters' });
+    }
+
+    if (instructions && String(instructions).trim().length > 1000) {
+      return res.status(400).json({ error: 'Instructions must not exceed 1000 characters' });
+    }
+
+    if (inventory_count !== undefined && (!Number.isInteger(Number(inventory_count)) || Number(inventory_count) < 0)) {
+      return res.status(400).json({ error: 'Inventory count must be a non-negative integer' });
+    }
+
+    if (custom_time && !/^\d{1,2}:\d{2}$/.test(String(custom_time).trim())) {
+      return res.status(400).json({ error: 'Time must be in HH:MM format' });
     }
 
     const slotsJson = JSON.stringify(Array.isArray(schedule_slots) ? schedule_slots : [schedule_slots]);
@@ -101,7 +113,7 @@ router.post('/:patientId', requireAuth, requirePatientAccess, requireEditPermiss
     const created = db.prepare('SELECT * FROM medications WHERE id = ?').get(newMedId);
     return res.status(201).json({
       message: 'Medication added successfully',
-      medication: { ...created, schedule_slots: JSON.parse(created.schedule_slots) },
+      medication: { ...created, schedule_slots: parseScheduleSlots(created.schedule_slots) },
     });
   } catch (err) {
     console.error('[Add Medication Error]:', err.message);
@@ -128,6 +140,27 @@ router.put('/:patientId/:medicationId', requireAuth, requirePatientAccess, requi
       refill_alert_threshold,
       prescribed_by,
     } = req.body;
+
+    if (name !== undefined) {
+      if (typeof name !== 'string' || !name.trim()) {
+        return res.status(400).json({ error: 'Medication name cannot be empty' });
+      }
+      if (name.trim().length > 100) {
+        return res.status(400).json({ error: 'Medication name must not exceed 100 characters' });
+      }
+    }
+
+    if (instructions !== undefined && instructions !== null && String(instructions).trim().length > 1000) {
+      return res.status(400).json({ error: 'Instructions must not exceed 1000 characters' });
+    }
+
+    if (inventory_count !== undefined && (!Number.isInteger(Number(inventory_count)) || Number(inventory_count) < 0)) {
+      return res.status(400).json({ error: 'Inventory count must be a non-negative integer' });
+    }
+
+    if (custom_time !== undefined && custom_time !== null && !/^\d{1,2}:\d{2}$/.test(String(custom_time).trim())) {
+      return res.status(400).json({ error: 'Time must be in HH:MM format' });
+    }
 
     const slotsJson = schedule_slots 
       ? JSON.stringify(Array.isArray(schedule_slots) ? schedule_slots : [schedule_slots])
@@ -169,7 +202,7 @@ router.put('/:patientId/:medicationId', requireAuth, requirePatientAccess, requi
     const updated = db.prepare('SELECT * FROM medications WHERE id = ?').get(req.params.medicationId);
     return res.json({
       message: 'Medication updated successfully',
-      medication: { ...updated, schedule_slots: JSON.parse(updated.schedule_slots) },
+      medication: { ...updated, schedule_slots: parseScheduleSlots(updated.schedule_slots) },
     });
   } catch (err) {
     console.error('[Update Medication Error]:', err.message);

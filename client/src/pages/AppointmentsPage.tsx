@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../api/client';
 import { Appointment } from '../types';
 import { AddAppointmentModal } from '../components/AddAppointmentModal';
+import { getErrorMessage } from '../utils/error';
 import {
   Calendar, Plus, Clock, MapPin, CheckCircle2,
   XCircle, Edit2, Trash2, CalendarDays
@@ -51,8 +52,8 @@ export const AppointmentsPage: React.FC = () => {
     try {
       await api.appointments.delete(activePatient.id, apptId);
       await loadAppointments();
-    } catch (err: any) {
-      alert(err.message || 'Failed to delete appointment');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to delete appointment'));
     }
   };
 
@@ -61,8 +62,8 @@ export const AppointmentsPage: React.FC = () => {
     try {
       await api.appointments.update(activePatient.id, appt.id, { status: newStatus });
       await loadAppointments();
-    } catch (err: any) {
-      alert(err.message || 'Failed to update status');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to update status'));
     }
   };
 
@@ -195,17 +196,21 @@ export const AppointmentsPage: React.FC = () => {
 
                     <div className="flex items-center space-x-1">
                       <button
+                        type="button"
                         onClick={() => {
                           setEditingAppt(appt);
                           setModalOpen(true);
                         }}
+                        aria-label={`Edit consultation with ${appt.doctor_name}`}
                         className="p-1.5 rounded-xl text-slate-400 hover:text-teal-600 hover:bg-teal-50 transition-colors cursor-pointer"
                         title="Edit Consultation"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
+                        type="button"
                         onClick={() => handleDelete(appt.id)}
+                        aria-label={`Delete consultation with ${appt.doctor_name}`}
                         className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
                         title="Delete Consultation"
                       >

@@ -47,6 +47,22 @@ router.post('/:patientId', requireAuth, requirePatientAccess, requireEditPermiss
       return res.status(400).json({ error: 'Doctor name, specialty, clinic/hospital, date, and time are required' });
     }
 
+    if (String(doctor_name).trim().length > 100) {
+      return res.status(400).json({ error: 'Doctor name must not exceed 100 characters' });
+    }
+
+    if (notes && String(notes).trim().length > 1000) {
+      return res.status(400).json({ error: 'Notes must not exceed 1000 characters' });
+    }
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(appointment_date).trim())) {
+      return res.status(400).json({ error: 'Date must be in YYYY-MM-DD format' });
+    }
+
+    if (!/^\d{1,2}:\d{2}$/.test(String(appointment_time).trim())) {
+      return res.status(400).json({ error: 'Time must be in HH:MM format' });
+    }
+
     const patientId = Number(req.params.patientId);
 
     const result = db.prepare(`
@@ -147,6 +163,22 @@ router.put('/:patientId/:appointmentId', requireAuth, requirePatientAccess, requ
       status,
       reminder_hours,
     } = req.body;
+
+    if (doctor_name !== undefined && String(doctor_name).trim().length > 100) {
+      return res.status(400).json({ error: 'Doctor name must not exceed 100 characters' });
+    }
+
+    if (notes !== undefined && notes !== null && String(notes).trim().length > 1000) {
+      return res.status(400).json({ error: 'Notes must not exceed 1000 characters' });
+    }
+
+    if (appointment_date !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(String(appointment_date).trim())) {
+      return res.status(400).json({ error: 'Date must be in YYYY-MM-DD format' });
+    }
+
+    if (appointment_time !== undefined && !/^\d{1,2}:\d{2}$/.test(String(appointment_time).trim())) {
+      return res.status(400).json({ error: 'Time must be in HH:MM format' });
+    }
 
     db.prepare(`
       UPDATE appointments

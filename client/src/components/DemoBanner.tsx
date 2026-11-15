@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { api } from '../api/client';
+import { getErrorMessage } from '../utils/error';
 import { useAuth } from '../context/AuthContext';
 import { Sparkles, Trash2, CheckCircle2 } from 'lucide-react';
 
@@ -42,8 +43,8 @@ export const DemoBanner: React.FC = () => {
       await refreshPatients();
       setBannerMsg(res.message);
       setTimeout(() => setBannerMsg(null), 5000);
-    } catch (err: any) {
-      alert(err.message || 'Failed to seed demo data');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to seed demo data'));
     } finally {
       setLoading(false);
     }
@@ -57,8 +58,8 @@ export const DemoBanner: React.FC = () => {
       await refreshPatients();
       setBannerMsg(res.message);
       setTimeout(() => setBannerMsg(null), 4000);
-    } catch (err: any) {
-      alert(err.message || 'Failed to reset demo data');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to reset demo data'));
     } finally {
       setLoading(false);
     }

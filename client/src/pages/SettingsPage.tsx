@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useElderMode } from '../context/ElderModeContext';
 import { api } from '../api/client';
+import { getErrorMessage } from '../utils/error';
 import {
   Settings, Accessibility, KeyRound, Mail, Sparkles,
   Trash2, ShieldCheck, HeartHandshake
@@ -30,8 +31,8 @@ export const SettingsPage: React.FC = () => {
       await api.auth.setPasscode(passcode);
       setPasscodeMsg('Security PIN updated successfully');
       setPasscode('');
-    } catch (err: any) {
-      alert(err.message || 'Failed to update passcode');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to update passcode'));
     } finally {
       setPasscodeLoading(false);
     }
@@ -44,8 +45,8 @@ export const SettingsPage: React.FC = () => {
       const res = await api.demo.seed();
       await refreshPatients();
       setDemoMsg(res.message);
-    } catch (err: any) {
-      alert(err.message || 'Failed to seed demo data');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to seed demo data'));
     } finally {
       setDemoLoading(false);
     }
@@ -59,8 +60,8 @@ export const SettingsPage: React.FC = () => {
       const res = await api.demo.reset();
       await refreshPatients();
       setDemoMsg(res.message);
-    } catch (err: any) {
-      alert(err.message || 'Failed to reset demo data');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to reset demo data'));
     } finally {
       setDemoLoading(false);
     }

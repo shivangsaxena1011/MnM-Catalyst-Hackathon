@@ -5,6 +5,7 @@ import { api } from '../api/client';
 import { MedicationLog, Escalation, Appointment, ActivityItem, AdherenceStats, Medication } from '../types';
 import { DoseActionModal } from '../components/DoseActionModal';
 import { parseServerDate } from '../utils/date';
+import { getErrorMessage } from '../utils/error';
 import confetti from 'canvas-confetti';
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer
@@ -137,8 +138,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate, onOpen
     try {
       await api.escalations.resolve(activePatient.id, escId, 'Resolved from dashboard follow-up');
       await loadDashboardData();
-    } catch (err: any) {
-      alert(err.message || 'Failed to resolve escalation');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to resolve escalation'));
     }
   };
 
@@ -201,6 +202,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate, onOpen
             <button
               onClick={loadDashboardData}
               title="Refresh Dashboard"
+              aria-label="Refresh Dashboard data"
               className="p-2.5 rounded-2xl bg-white border border-amber-200/80 hover:bg-amber-50 text-slate-700 transition-colors cursor-pointer shadow-2xs"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-teal-600' : ''}`} />
@@ -211,7 +213,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate, onOpen
 
       {/* Active Escalation Alerts (Critical Safety Priority) */}
       {escalations.length > 0 && (
-        <div className="space-y-3">
+        <div className="space-y-3" role="alert" aria-live="assertive">
           {escalations.map(esc => (
             <div
               key={esc.id}

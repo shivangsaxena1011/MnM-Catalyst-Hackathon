@@ -88,7 +88,7 @@ export const HistoryPage: React.FC = () => {
                       fontSize: '12px',
                       boxShadow: '0 10px 25px -5px rgba(251, 113, 133, 0.2)',
                     }}
-                    formatter={(val: any) => [`${val}% Adherence`, 'Rate']}
+                    formatter={(val: unknown) => [`${val}% Adherence`, 'Rate']}
                   />
                   <Area
                     type="monotone"

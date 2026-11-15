@@ -2,6 +2,7 @@ import express from 'express';
 import { db } from '../db/database.js';
 import { requireAuth, requirePatientAccess, requireEditPermission } from '../middleware/auth.js';
 import { getPatientDateTime } from '../services/escalationService.js';
+import { parseScheduleSlots } from '../utils/schedule.js';
 
 const router = express.Router();
 
@@ -42,12 +43,7 @@ router.get('/:patientId', requireAuth, requirePatientAccess, (req, res) => {
 
     const fullSchedule = [];
     for (const med of activeMeds) {
-      let slots = [];
-      try {
-        slots = JSON.parse(med.schedule_slots);
-      } catch {
-        slots = [med.schedule_slots];
-      }
+      const slots = parseScheduleSlots(med.schedule_slots);
 
       for (const slot of slots) {
         // Find existing log for this med and slot

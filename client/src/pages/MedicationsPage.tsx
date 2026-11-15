@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../api/client';
 import { Medication } from '../types';
 import { AddMedicationModal } from '../components/AddMedicationModal';
+import { getErrorMessage } from '../utils/error';
 import {
   Pill, Plus, Edit2, Trash2, AlertCircle, Clock, PackageCheck
 } from 'lucide-react';
@@ -47,8 +48,8 @@ export const MedicationsPage: React.FC = () => {
     try {
       await api.medications.delete(activePatient.id, medId);
       await loadMedications();
-    } catch (err: any) {
-      alert(err.message || 'Failed to delete medication');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to delete medication'));
     }
   };
 
@@ -133,17 +134,21 @@ export const MedicationsPage: React.FC = () => {
 
                     <div className="flex items-center space-x-1">
                       <button
+                        type="button"
                         onClick={() => {
                           setEditingMed(med);
                           setModalOpen(true);
                         }}
+                        aria-label={`Edit ${med.name}`}
                         className="p-2 rounded-xl text-slate-400 hover:text-teal-600 hover:bg-teal-50 transition-colors cursor-pointer"
                         title="Edit Prescription"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
+                        type="button"
                         onClick={() => handleDeleteMedication(med.id, med.name)}
+                        aria-label={`Discontinue ${med.name}`}
                         className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
                         title="Discontinue Medication"
                       >

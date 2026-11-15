@@ -169,7 +169,7 @@ export const api = {
         `/escalations/${patientId}`
       ),
     scan: (patientId: number) =>
-      request<{ message: string; escalationsTriggered: any[] }>(`/escalations/${patientId}/scan`, {
+      request<{ message: string; escalationsTriggered: Escalation[] }>(`/escalations/${patientId}/scan`, {
         method: 'POST',
       }),
     simulate: (patientId: number, payload: { medication_id?: number; slot?: string; tier?: number }) =>

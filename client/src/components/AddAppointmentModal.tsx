@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { Appointment } from '../types';
 import { X, Calendar } from 'lucide-react';
+import { getErrorMessage } from '../utils/error';
 
 interface AddAppointmentModalProps {
   initialAppt?: Appointment | null;
@@ -22,13 +23,24 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({ initia
   const [reminderHours, setReminderHours] = useState<number>(initialAppt?.reminder_hours ?? 24);
   const [submitting, setSubmitting] = useState(false);
 
+  const prevFocusedElem = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    prevFocusedElem.current = document.activeElement as HTMLElement | null;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      prevFocusedElem.current?.focus?.();
+    };
+  }, [onClose]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!doctorName.trim() || !specialty.trim() || !clinicHospital.trim()) {
-      alert('Please fill in doctor name, specialty, and clinic/hospital');
-      return;
-    }
-
     setSubmitting(true);
     try {
       await onSave({
@@ -42,8 +54,8 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({ initia
         reminder_hours: Number(reminderHours),
       });
       onClose();
-    } catch (err: any) {
-      alert(err.message || 'Failed to save appointment');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to save appointment'));
     } finally {
       setSubmitting(false);
     }
@@ -52,6 +64,9 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({ initia
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-md overflow-y-auto">
       <motion.div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="appt-modal-title"
         initial={{ opacity: 0, scale: 0.94, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.94 }}
@@ -59,7 +74,9 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({ initia
         className="glass-card max-w-lg w-full p-6 sm:p-8 shadow-2xl relative my-8 bg-white/95"
       >
         <button
+          type="button"
           onClick={onClose}
+          aria-label="Close consultation modal"
           className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100 transition-colors"
         >
           <X className="w-5 h-5" />
@@ -70,8 +87,8 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({ initia
             <Calendar className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-[#0B1E33]">
-              {initialAppt ? 'Edit Appointment' : 'Schedule Appointment'}
+            <h3 id="appt-modal-title" className="text-xl font-bold text-[#0B1E33]">
+              {initialAppt ? 'Edit Consultation' : 'Schedule Consultation'}
             </h3>
             <p className="text-xs text-slate-500">
               Appointment Guardian will remind authorized family and senior
@@ -82,8 +99,9 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({ initia
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Doctor Name *</label>
+              <label htmlFor="appt-doctor-name" className="block text-xs font-bold text-slate-700 mb-1">Doctor Name *</label>
               <input
+                id="appt-doctor-name"
                 type="text"
                 required
                 value={doctorName}
@@ -94,8 +112,9 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({ initia
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Specialty *</label>
+              <label htmlFor="appt-specialty" className="block text-xs font-bold text-slate-700 mb-1">Specialty *</label>
               <input
+                id="appt-specialty"
                 type="text"
                 required
                 value={specialty}
@@ -108,8 +127,9 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({ initia
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Clinic / Hospital *</label>
+              <label htmlFor="appt-clinic" className="block text-xs font-bold text-slate-700 mb-1">Clinic / Hospital *</label>
               <input
+                id="appt-clinic"
                 type="text"
                 required
                 value={clinicHospital}
@@ -120,8 +140,9 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({ initia
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Clinic Address / Location</label>
+              <label htmlFor="appt-address" className="block text-xs font-bold text-slate-700 mb-1">Clinic Address / Location</label>
               <input
+                id="appt-address"
                 type="text"
                 value={address}
                 onChange={e => setAddress(e.target.value)}
@@ -133,8 +154,9 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({ initia
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Date *</label>
+              <label htmlFor="appt-date" className="block text-xs font-bold text-slate-700 mb-1">Date *</label>
               <input
+                id="appt-date"
                 type="date"
                 required
                 value={appointmentDate}
@@ -144,8 +166,9 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({ initia
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Time *</label>
+              <label htmlFor="appt-time" className="block text-xs font-bold text-slate-700 mb-1">Time *</label>
               <input
+                id="appt-time"
                 type="time"
                 required
                 value={appointmentTime}
@@ -155,8 +178,9 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({ initia
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Remind Ahead</label>
+              <label htmlFor="appt-reminder-hours" className="block text-xs font-bold text-slate-700 mb-1">Remind Ahead</label>
               <select
+                id="appt-reminder-hours"
                 value={reminderHours}
                 onChange={e => setReminderHours(Number(e.target.value))}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none bg-white"
@@ -170,8 +194,9 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({ initia
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Notes & Instructions</label>
+            <label htmlFor="appt-notes" className="block text-xs font-bold text-slate-700 mb-1">Notes & Instructions</label>
             <textarea
+              id="appt-notes"
               rows={2}
               value={notes}
               onChange={e => setNotes(e.target.value)}
