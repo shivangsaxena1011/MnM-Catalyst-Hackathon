@@ -203,6 +203,26 @@ export function initDatabase() {
   } catch (_) {
     // Column already exists
   }
+  try {
+    db.exec('ALTER TABLE appointments ADD COLUMN reminder_sent INTEGER DEFAULT 0;');
+  } catch (_) {
+    // Column already exists
+  }
+
+  // Table to track sent upcoming dose reminder emails
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS upcoming_dose_reminders (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      patient_id INTEGER NOT NULL,
+      medication_id INTEGER NOT NULL,
+      scheduled_date TEXT NOT NULL,
+      scheduled_slot TEXT NOT NULL,
+      sent_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(patient_id, medication_id, scheduled_date, scheduled_slot),
+      FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
+      FOREIGN KEY (medication_id) REFERENCES medications(id) ON DELETE CASCADE
+    );
+  `);
 
   console.log('[Database] Schema verified and initialized successfully.');
 }

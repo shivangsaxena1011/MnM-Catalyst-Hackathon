@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
-import { HeartHandshake, UserPlus, KeyRound, ArrowLeft } from 'lucide-react';
+import { UserPlus, KeyRound, ArrowLeft, Heart, CheckCircle2 } from 'lucide-react';
 
 interface OnboardingPageProps {
   onBack: () => void;
@@ -86,11 +86,11 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onBack, onSucces
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#FFF8F1] py-12 px-4 sm:px-6 lg:px-8 text-slate-800">
       <div className="max-w-2xl mx-auto">
         <button
           onClick={onBack}
-          className="inline-flex items-center space-x-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 mb-6 transition-colors"
+          className="inline-flex items-center space-x-1.5 text-xs font-bold text-slate-500 hover:text-slate-900 mb-6 transition-colors cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back</span>
@@ -101,22 +101,22 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onBack, onSucces
             <img
               src="/logo.png"
               alt="SAATHI CARE - AI-Powered Eldercare"
-              className="h-14 sm:h-16 w-auto object-contain drop-shadow-sm"
+              className="h-14 sm:h-16 w-auto object-contain drop-shadow-xs"
             />
           </div>
-          <h2 className="text-3xl font-extrabold text-[#1e3a5f]">Care Circle Setup</h2>
-          <p className="mt-1 text-sm text-slate-500">
+          <h2 className="text-3xl font-extrabold text-slate-900 font-serif">Care Circle Setup</h2>
+          <p className="mt-1 text-sm text-slate-500 font-medium">
             Set up an elder profile or connect with an existing family member’s circle
           </p>
         </div>
 
-        {/* Mode Selector */}
-        <div className="grid grid-cols-2 gap-3 bg-slate-100 p-1.5 rounded-2xl mb-8">
+        {/* Animated Progress / Mode Selector */}
+        <div className="grid grid-cols-2 gap-2 bg-amber-50/80 p-1.5 rounded-2xl mb-8 border border-amber-200/60">
           <button
             type="button"
             onClick={() => { setMode('create'); setError(null); }}
             className={`py-3 rounded-xl font-bold text-sm flex items-center justify-center space-x-2 transition-all cursor-pointer ${
-              mode === 'create' ? 'bg-white text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-900'
+              mode === 'create' ? 'bg-white text-teal-950 shadow-xs font-black' : 'text-slate-500 hover:text-slate-900'
             }`}
           >
             <UserPlus className="w-4 h-4 text-teal-600" />
@@ -126,21 +126,21 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onBack, onSucces
             type="button"
             onClick={() => { setMode('join'); setError(null); }}
             className={`py-3 rounded-xl font-bold text-sm flex items-center justify-center space-x-2 transition-all cursor-pointer ${
-              mode === 'join' ? 'bg-white text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-900'
+              mode === 'join' ? 'bg-white text-teal-950 shadow-xs font-black' : 'text-slate-500 hover:text-slate-900'
             }`}
           >
-            <KeyRound className="w-4 h-4 text-teal-600" />
+            <KeyRound className="w-4 h-4 text-amber-600" />
             <span>Join with Invite Code</span>
           </button>
         </div>
 
         {error && (
-          <div className="mb-6 bg-rose-50 border border-rose-200 text-rose-800 text-xs rounded-2xl p-4 font-medium">
+          <div className="mb-6 bg-rose-50 border border-rose-200 text-rose-800 text-xs rounded-2xl p-4 font-bold">
             {error}
           </div>
         )}
 
-        <div className="bg-white rounded-3xl shadow-xl border border-slate-200/80 p-6 sm:p-8">
+        <div className="glass-card p-6 sm:p-8">
           {mode === 'create' ? (
             <form onSubmit={handleCreate} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -152,7 +152,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onBack, onSucces
                     value={fullName}
                     onChange={e => setFullName(e.target.value)}
                     placeholder="e.g. Ramesh Sharma"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 text-sm bg-white"
                   />
                 </div>
 
@@ -165,7 +165,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onBack, onSucces
                     max={120}
                     value={age}
                     onChange={e => setAge(Number(e.target.value))}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 text-sm bg-white"
                   />
                 </div>
               </div>
@@ -176,7 +176,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onBack, onSucces
                   <select
                     value={gender}
                     onChange={e => setGender(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none bg-white"
+                    className="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 text-sm bg-white font-medium"
                   >
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
@@ -189,39 +189,44 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onBack, onSucces
                   <select
                     value={bloodGroup}
                     onChange={e => setBloodGroup(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none bg-white"
+                    className="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 text-sm bg-white font-medium"
                   >
                     <option value="A+">A+</option>
                     <option value="A-">A-</option>
                     <option value="B+">B+</option>
                     <option value="B-">B-</option>
-                    <option value="O+">O+</option>
-                    <option value="O-">O-</option>
                     <option value="AB+">AB+</option>
                     <option value="AB-">AB-</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">Your Relationship</label>
-                  <input
-                    type="text"
+                  <select
                     value={relationship}
                     onChange={e => setRelationship(e.target.value)}
-                    placeholder="e.g. Self, Daughter, Son, Nurse"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none"
-                  />
+                    className="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 text-sm bg-white font-medium"
+                  >
+                    <option value="Self">Self (I am the senior)</option>
+                    <option value="Son">Son</option>
+                    <option value="Daughter">Daughter</option>
+                    <option value="Spouse">Spouse</option>
+                    <option value="Nurse">Primary Nurse / Caregiver</option>
+                    <option value="Doctor">Attending Physician</option>
+                  </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Existing Health Conditions</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Chronic Health Conditions</label>
                 <input
                   type="text"
                   value={conditions}
                   onChange={e => setConditions(e.target.value)}
-                  placeholder="e.g. Hypertension, Type 2 Diabetes, Arthritis"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                  placeholder="e.g. Hypertension, Type 2 Diabetes"
+                  className="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 text-sm bg-white"
                 />
               </div>
 
@@ -231,42 +236,39 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onBack, onSucces
                   type="text"
                   value={allergies}
                   onChange={e => setAllergies(e.target.value)}
-                  placeholder="e.g. Penicillin, Sulfa drugs, None"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                  placeholder="e.g. Penicillin, Sulfa drugs"
+                  className="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 text-sm bg-white"
                 />
               </div>
 
-              <div className="pt-2 border-t border-slate-100">
-                <p className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">Primary Emergency Contact</p>
+              <div className="pt-2 border-t border-amber-100">
+                <p className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">Emergency Contact</p>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">Contact Name</label>
                     <input
                       type="text"
                       value={emergencyContactName}
                       onChange={e => setEmergencyContactName(e.target.value)}
-                      placeholder="e.g. Priya Sharma"
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm"
+                      placeholder="Contact Name"
+                      className="w-full px-3.5 py-2 rounded-2xl border border-slate-200 text-sm bg-white"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">Contact Phone</label>
                     <input
                       type="tel"
                       value={emergencyContactPhone}
                       onChange={e => setEmergencyContactPhone(e.target.value)}
                       placeholder="+91 98765 43210"
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm"
+                      className="w-full px-3.5 py-2 rounded-2xl border border-slate-200 text-sm bg-white"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">Relation</label>
                     <input
                       type="text"
                       value={emergencyContactRelation}
                       onChange={e => setEmergencyContactRelation(e.target.value)}
                       placeholder="e.g. Daughter"
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm"
+                      className="w-full px-3.5 py-2 rounded-2xl border border-slate-200 text-sm bg-white"
                     />
                   </div>
                 </div>
@@ -275,15 +277,15 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onBack, onSucces
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-sm shadow-lg shadow-teal-700/20 transition-all cursor-pointer disabled:opacity-50 mt-4"
+                className="w-full py-4 rounded-2xl signature-btn text-white font-bold text-sm shadow-md transition-all cursor-pointer disabled:opacity-50 mt-4"
               >
                 {loading ? 'Creating Profile...' : 'Create Care Profile & Generate Invite Code'}
               </button>
             </form>
           ) : (
             <form onSubmit={handleJoin} className="space-y-4">
-              <div className="bg-teal-50 p-4 rounded-2xl border border-teal-200 text-xs text-teal-900 leading-relaxed">
-                🔑 Enter the unique <strong>SAATHI-XXXX</strong> invite code provided by the senior or the primary caregiver to securely join their Care Circle.
+              <div className="bg-amber-50 rounded-2xl p-4 border border-amber-200 text-xs text-amber-950">
+                💡 Ask the senior or family member who created the Care Circle for their 6-character code (e.g. <code className="font-bold">SAATHI-XXXX</code>).
               </div>
 
               <div>
@@ -293,29 +295,33 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onBack, onSucces
                   required
                   value={inviteCode}
                   onChange={e => setInviteCode(e.target.value.toUpperCase())}
-                  placeholder="e.g. SAATHI-8291"
-                  className="w-full px-4 py-3 rounded-xl border border-slate-300 text-center font-mono font-bold text-lg tracking-wider focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                  placeholder="e.g. SAATHI-7A8B"
+                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 text-base font-mono font-bold tracking-widest bg-white"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Your Relationship to the Patient *</label>
-                <input
-                  type="text"
-                  required
+                <label className="block text-xs font-bold text-slate-700 mb-1">Your Relationship to Patient</label>
+                <select
                   value={joinRelationship}
                   onChange={e => setJoinRelationship(e.target.value)}
-                  placeholder="e.g. Daughter, Son, Visiting Nurse, Sibling"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none"
-                />
+                  className="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 text-sm bg-white font-medium"
+                >
+                  <option value="Son">Son</option>
+                  <option value="Daughter">Daughter</option>
+                  <option value="Spouse">Spouse</option>
+                  <option value="Grandchild">Grandchild</option>
+                  <option value="Nurse">Primary Nurse / Caregiver</option>
+                  <option value="Physician">Attending Physician</option>
+                </select>
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-sm shadow-lg shadow-teal-700/20 transition-all cursor-pointer disabled:opacity-50 mt-4"
+                className="w-full py-4 rounded-2xl signature-btn text-white font-bold text-sm shadow-md transition-all cursor-pointer disabled:opacity-50 mt-2"
               >
-                {loading ? 'Verifying Code...' : 'Join Care Circle'}
+                {loading ? 'Connecting...' : 'Join Care Circle Profile'}
               </button>
             </form>
           )}
@@ -324,3 +330,5 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onBack, onSucces
     </div>
   );
 };
+
+export default OnboardingPage;

@@ -71,150 +71,138 @@ export const SettingsPage: React.FC = () => {
       
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-extrabold text-[#0B1E33]">Platform & Safety Settings</h1>
-        <p className="text-xs text-slate-500 font-medium">
-          Configure elder accessibility, quick security PIN, email notifications, and evaluator demo data
+        <h1 className="text-2xl font-extrabold text-slate-900 font-serif">Platform Settings</h1>
+        <p className="text-xs sm:text-sm text-slate-500 font-medium">
+          Accessibility preferences, passcode security, and judge evaluation tools
         </p>
       </div>
 
-      {/* 1. Elder-Friendly Mode Preference */}
-      <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-11 h-11 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
-              <Accessibility className="w-6 h-6" />
+      <div className="space-y-6">
+        
+        {/* Section 1: Accessibility & Elder Mode */}
+        <div className="glass-card p-6 space-y-4">
+          <div className="flex items-center space-x-3 pb-3 border-b border-amber-100">
+            <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
+              <Accessibility className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-900">Elder-Friendly Accessibility Mode</h3>
-              <p className="text-xs text-slate-500">
-                Oversized buttons, 1.3x - 1.5x font sizes, high-contrast palette, and simplified focus
-              </p>
+              <h2 className="text-base font-bold text-slate-900 font-serif">Accessibility & Vision Comfort</h2>
+              <p className="text-xs text-slate-500">Elder-friendly high-contrast layout and text-to-speech audio</p>
             </div>
           </div>
 
-          <button
-            onClick={toggleElderMode}
-            className={`px-4 py-2 rounded-xl font-bold text-xs transition-all cursor-pointer ${
-              isElderMode
-                ? 'bg-amber-500 text-slate-950 shadow-md ring-2 ring-amber-400/30'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
-            {isElderMode ? 'Active (ON)' : 'Disabled (OFF)'}
-          </button>
-        </div>
-      </div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-amber-50/60 border border-amber-200/50">
+            <div>
+              <div className="font-bold text-slate-900 text-sm">Elder-Friendly Mode</div>
+              <p className="text-xs text-slate-600 max-w-md mt-0.5">
+                Increases button sizes, switches to single-dose giant view, enlarges typography to 20px+, and disables motion.
+              </p>
+            </div>
 
-      {/* 2. Security PIN / Passcode Management */}
-      <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
-        <div className="flex items-center space-x-3">
-          <div className="w-11 h-11 rounded-2xl bg-teal-100 text-teal-800 flex items-center justify-center font-bold">
-            <KeyRound className="w-6 h-6" />
+            <button
+              onClick={toggleElderMode}
+              className={`px-5 py-2.5 rounded-2xl font-bold text-xs transition-all cursor-pointer ${
+                isElderMode
+                  ? 'bg-amber-600 text-white shadow-xs'
+                  : 'bg-white border border-amber-300 text-slate-800 hover:bg-amber-50'
+              }`}
+            >
+              {isElderMode ? 'Active (Turn Off)' : 'Enable Elder View'}
+            </button>
           </div>
-          <div>
-            <h3 className="text-base font-bold text-slate-900">Quick Security PIN (4-Digit Passcode)</h3>
-            <p className="text-xs text-slate-500">
-              Allows the senior to sign into their dashboard using a simple 4-digit PIN instead of entering a password
+        </div>
+
+        {/* Section 2: Security & 4-Digit Passcode */}
+        <div className="glass-card p-6 space-y-4">
+          <div className="flex items-center space-x-3 pb-3 border-b border-amber-100">
+            <div className="w-10 h-10 rounded-2xl bg-teal-100 text-teal-800 flex items-center justify-center font-bold">
+              <KeyRound className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-slate-900 font-serif">Passcode Security (Bcrypt Hashed)</h2>
+              <p className="text-xs text-slate-500">Update your 4-digit numeric PIN for instant passwordless elder login</p>
+            </div>
+          </div>
+
+          <form onSubmit={handleUpdatePasscode} className="space-y-4 max-w-md">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">New 4-Digit Security PIN</label>
+              <input
+                type="password"
+                maxLength={6}
+                required
+                value={passcode}
+                onChange={e => setPasscode(e.target.value.replace(/\D/g, ''))}
+                placeholder="e.g. 1234"
+                className="w-full px-4 py-2.5 rounded-2xl border border-slate-200 text-sm font-mono tracking-widest bg-white"
+              />
+            </div>
+
+            {passcodeMsg && (
+              <div className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 p-2.5 rounded-xl">
+                ✓ {passcodeMsg}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={passcodeLoading}
+              className="px-5 py-2.5 rounded-2xl signature-btn text-white font-bold text-xs shadow-xs cursor-pointer disabled:opacity-50"
+            >
+              {passcodeLoading ? 'Updating...' : 'Update Security PIN'}
+            </button>
+          </form>
+        </div>
+
+        {/* Section 3: Judge Demo Seeder */}
+        <div className="glass-card p-6 space-y-4">
+          <div className="flex items-center space-x-3 pb-3 border-b border-amber-100">
+            <div className="w-10 h-10 rounded-2xl signature-gradient text-white flex items-center justify-center font-bold">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-slate-900 font-serif">Hackathon Demonstration Tools</h2>
+              <p className="text-xs text-slate-500">Seed realistic elder profile (Ramesh Sharma, 72y) with 7-day adherence and active escalation</p>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Judges can populate or reset demo data anytime. The demo profile includes realistic prescriptions (Amlodipine, Metformin, Atorvastatin), complete 7-day adherence history, an upcoming Cardiology visit, and an active Tier 3 Escalation alert.
             </p>
+
+            {demoMsg && (
+              <div className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 p-3 rounded-2xl">
+                {demoMsg}
+              </div>
+            )}
+
+            <div className="flex items-center space-x-3 pt-2">
+              <button
+                onClick={handleSeedDemo}
+                disabled={demoLoading}
+                className="px-5 py-2.5 rounded-2xl signature-btn text-white font-bold text-xs shadow-xs flex items-center space-x-1.5 cursor-pointer disabled:opacity-50"
+              >
+                <Sparkles className="w-4 h-4 text-amber-200" />
+                <span>{demoLoading ? 'Loading...' : 'Seed Judge Demo Profile'}</span>
+              </button>
+
+              <button
+                onClick={handleResetDemo}
+                disabled={demoLoading}
+                className="px-4 py-2.5 rounded-2xl bg-white border border-rose-200 hover:bg-rose-50 text-rose-700 font-bold text-xs transition-colors flex items-center space-x-1.5 cursor-pointer disabled:opacity-50"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Reset Demo Profile</span>
+              </button>
+            </div>
           </div>
         </div>
 
-        {passcodeMsg && (
-          <div className="p-3 bg-emerald-50 text-emerald-800 rounded-xl text-xs font-semibold">
-            {passcodeMsg}
-          </div>
-        )}
-
-        <form onSubmit={handleUpdatePasscode} className="flex flex-col sm:flex-row items-center gap-3 pt-2">
-          <input
-            type="password"
-            maxLength={6}
-            required
-            value={passcode}
-            onChange={e => setPasscode(e.target.value)}
-            placeholder="Enter new 4-digit PIN"
-            className="w-full sm:w-64 px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-mono tracking-widest text-center focus:ring-2 focus:ring-teal-500 focus:outline-none"
-          />
-          <button
-            type="submit"
-            disabled={passcodeLoading}
-            className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs shadow-md transition-all cursor-pointer disabled:opacity-50"
-          >
-            {passcodeLoading ? 'Updating...' : 'Set / Update PIN'}
-          </button>
-        </form>
-      </div>
-
-      {/* 3. Honest Email Notifications (Nodemailer) */}
-      <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
-        <div className="flex items-center space-x-3">
-          <div className="w-11 h-11 rounded-2xl bg-indigo-100 text-indigo-800 flex items-center justify-center font-bold">
-            <Mail className="w-6 h-6" />
-          </div>
-          <div>
-            <h3 className="text-base font-bold text-slate-900">Nodemailer Email Notification Engine</h3>
-            <p className="text-xs text-slate-500">
-              Dispatches real HTML notifications to authorized family and caregivers during Tier 3 dose escalations
-            </p>
-          </div>
-        </div>
-
-        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-700 space-y-2">
-          <div className="font-semibold text-slate-900">Configuration Variables (server/.env):</div>
-          <code className="block bg-slate-900 text-teal-300 p-3 rounded-xl font-mono text-[11px] leading-relaxed">
-            SMTP_HOST=smtp.gmail.com<br />
-            SMTP_PORT=587<br />
-            SMTP_USER=your-email@gmail.com<br />
-            SMTP_PASS=your-app-password<br />
-            SMTP_FROM="SAATHI CARE &lt;notifications@saathicare.health&gt;"
-          </code>
-          <p className="text-slate-500 pt-1">
-            If SMTP environment variables are unconfigured, the system safely falls back to recording all caregiver alerts in the in-app notification center.
-          </p>
-        </div>
-      </div>
-
-      {/* 4. Judge Demo Data Options (Prompt Requirement) */}
-      <div className="bg-gradient-to-r from-slate-900 to-[#0B1E33] text-white rounded-3xl p-6 sm:p-8 shadow-xl space-y-4">
-        <div className="flex items-center space-x-3">
-          <div className="w-11 h-11 rounded-2xl bg-teal-500/20 text-teal-300 flex items-center justify-center font-bold border border-teal-400/30">
-            <Sparkles className="w-6 h-6" />
-          </div>
-          <div>
-            <h3 className="text-lg font-bold">Hackathon Judge Demo Data Options</h3>
-            <p className="text-xs text-slate-300">
-              Instantly seed or reset an authentic elderly clinical case ("Ramesh Sharma", 72, Type 2 Diabetes & Hypertension)
-            </p>
-          </div>
-        </div>
-
-        {demoMsg && (
-          <div className="p-3 bg-teal-500/20 border border-teal-400/30 text-teal-200 rounded-xl text-xs font-semibold">
-            {demoMsg}
-          </div>
-        )}
-
-        <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
-          <button
-            onClick={handleSeedDemo}
-            disabled={demoLoading}
-            className="w-full sm:w-auto px-5 py-3 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50"
-          >
-            <Sparkles className="w-4 h-4 text-teal-200" />
-            <span>{demoLoading ? 'Processing...' : 'Load Judge Demo Profile (Ramesh Sharma)'}</span>
-          </button>
-
-          <button
-            onClick={handleResetDemo}
-            disabled={demoLoading}
-            className="w-full sm:w-auto px-4 py-3 rounded-xl bg-rose-900/50 hover:bg-rose-900 text-rose-200 border border-rose-700/50 font-bold text-xs transition-all flex items-center justify-center space-x-1.5 cursor-pointer disabled:opacity-50"
-          >
-            <Trash2 className="w-4 h-4" />
-            <span>Reset Demo Profile</span>
-          </button>
-        </div>
       </div>
 
     </div>
   );
 };
+
+export default SettingsPage;

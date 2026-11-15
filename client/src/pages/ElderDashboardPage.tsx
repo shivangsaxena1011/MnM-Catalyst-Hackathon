@@ -5,7 +5,7 @@ import { api } from '../api/client';
 import { MedicationLog } from '../types';
 import {
   Volume2, Check, X, PhoneCall, Heart,
-  Sparkles, ShieldCheck, Clock
+  ShieldCheck, Clock, Utensils
 } from 'lucide-react';
 
 interface ElderDashboardPageProps {
@@ -21,6 +21,7 @@ export const ElderDashboardPage: React.FC<ElderDashboardPageProps> = ({ onBackTo
   const [loading, setLoading] = useState(true);
   const [activeDoseIndex, setActiveDoseIndex] = useState(0);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const loadSchedule = useCallback(async () => {
     if (!activePatient) return;
@@ -54,8 +55,14 @@ export const ElderDashboardPage: React.FC<ElderDashboardPageProps> = ({ onBackTo
       speak('You have taken all your medicines for today. Great job!');
       return;
     }
-    const textToSpeak = `Hello ${activePatient?.full_name || ''}. It is time for your ${currentDose.scheduled_slot} medicine: ${currentDose.medication_name}, ${currentDose.dosage}. ${currentDose.instructions || ''}. Please take this with a full glass of water.`;
+    const foodGuidance = currentDose.meal_timing 
+      ? `Please take this ${currentDose.meal_timing.replace('_', ' ')}.` 
+      : 'Please take this with a full glass of water.';
+    const textToSpeak = `Namaste ${activePatient?.full_name || ''}. It is time for your ${currentDose.scheduled_slot} medicine: ${currentDose.medication_name}, dosage ${currentDose.dosage}. ${foodGuidance} ${currentDose.instructions || ''}. Tap the big green button below once you have swallowed it.`;
+    
+    setIsSpeaking(true);
     speak(textToSpeak);
+    setTimeout(() => setIsSpeaking(false), 6500);
   };
 
   const handleConfirmTaken = async () => {
@@ -102,137 +109,150 @@ export const ElderDashboardPage: React.FC<ElderDashboardPageProps> = ({ onBackTo
     <div className="max-w-3xl mx-auto space-y-6 py-4">
       
       {/* Top Elder Header */}
-      <div className="flex items-center justify-between pb-4 border-b border-emerald-200">
+      <div className="flex items-center justify-between pb-4 border-b-2 border-amber-300">
         <div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-[#0B1E33] tracking-tight">
-            Namaste, {activePatient?.full_name || 'Friend'}
+          <h1 className="text-3xl sm:text-4xl font-black text-slate-950 font-serif">
+            Namaste, {activePatient?.full_name || 'Friend'} 🙏
           </h1>
-          <p className="text-base font-semibold text-emerald-800 mt-1">
-            Today's Care Companion • Safe & Simple
+          <p className="text-lg font-bold text-teal-800 mt-1">
+            Today's Care Companion • Safe, Simple & Clear
           </p>
         </div>
 
         <button
           onClick={onBackToStandard}
-          className="px-4 py-2.5 rounded-2xl bg-white border-2 border-slate-300 hover:border-slate-400 text-slate-800 font-bold text-sm shadow-sm transition-all"
+          className="px-5 py-3 rounded-2xl bg-white border-2 border-slate-400 hover:border-slate-600 text-slate-900 font-extrabold text-sm shadow-sm transition-all cursor-pointer"
         >
           Exit to Standard View
         </button>
       </div>
 
       {actionMessage && (
-        <div className="p-4 rounded-2xl bg-emerald-100 border-2 border-emerald-400 text-emerald-950 text-lg font-bold text-center animate-in fade-in">
+        <div className="p-5 rounded-2xl bg-emerald-100 border-3 border-emerald-500 text-emerald-950 text-xl font-black text-center shadow-md">
           {actionMessage}
         </div>
       )}
 
-      {/* Main Focus: Current Dose Card */}
+      {/* Main Focus: Giant Single-Dose Card */}
       {loading ? (
-        <div className="py-16 text-center text-slate-500 text-xl font-bold">Checking your pill schedule...</div>
+        <div className="py-20 text-center text-slate-700 text-2xl font-bold">
+          Checking your pill schedule...
+        </div>
       ) : schedule.length === 0 ? (
-        <div className="bg-white rounded-3xl p-10 text-center border-4 border-slate-200 space-y-4">
-          <Heart className="w-16 h-16 text-emerald-500 mx-auto" />
-          <h2 className="text-2xl font-black text-slate-900">No Pills Scheduled Today</h2>
-          <p className="text-lg text-slate-600">Enjoy your day and stay well hydrated!</p>
+        <div className="bg-white rounded-3xl p-12 text-center border-4 border-slate-300 space-y-4 shadow-sm">
+          <Heart className="w-20 h-20 text-emerald-600 mx-auto" />
+          <h2 className="text-3xl font-black text-slate-950 font-serif">No Pills Scheduled Today</h2>
+          <p className="text-xl text-slate-700 font-bold">Enjoy your peaceful day and stay well hydrated!</p>
         </div>
       ) : !currentDose || schedule.every(s => s.status === 'taken' || s.status === 'skipped') ? (
-        <div className="bg-emerald-50 rounded-3xl p-10 text-center border-4 border-emerald-300 space-y-4 shadow-lg">
-          <div className="w-20 h-20 bg-emerald-500 text-white rounded-full flex items-center justify-center mx-auto text-3xl font-black shadow-md">
+        <div className="bg-emerald-50 rounded-3xl p-12 text-center border-4 border-emerald-400 space-y-5 shadow-lg">
+          <div className="w-24 h-24 bg-emerald-600 text-white rounded-full flex items-center justify-center mx-auto text-5xl font-black shadow-md">
             ✓
           </div>
-          <h2 className="text-3xl font-black text-emerald-950">All Done For Today!</h2>
-          <p className="text-xl text-emerald-800 font-semibold max-w-md mx-auto">
+          <h2 className="text-4xl font-black text-emerald-950 font-serif">All Done For Today!</h2>
+          <p className="text-2xl text-emerald-900 font-bold max-w-lg mx-auto leading-relaxed">
             All your scheduled medications for today have been confirmed. Your family and caregivers have been updated.
           </p>
           <div className="pt-4">
             <button
               onClick={() => speak('All your pills for today have been completed. Great job!')}
-              className="px-6 py-3 rounded-2xl bg-white text-emerald-900 border-2 border-emerald-400 font-bold text-base flex items-center justify-center space-x-2 mx-auto cursor-pointer"
+              className="px-8 py-4 rounded-2xl bg-white text-emerald-950 border-3 border-emerald-500 font-black text-xl flex items-center justify-center space-x-3 mx-auto shadow-md cursor-pointer"
             >
-              <Volume2 className="w-5 h-5" />
-              <span>Listen</span>
+              <Volume2 className="w-7 h-7 text-emerald-700" />
+              <span>Listen Aloud</span>
             </button>
           </div>
         </div>
       ) : (
-        <div className="bg-white rounded-3xl p-6 sm:p-10 border-4 border-teal-500 shadow-xl space-y-6">
+        <div className="bg-white rounded-3xl p-6 sm:p-10 border-4 border-teal-600 shadow-xl space-y-8">
           
-          {/* Slot Header */}
-          <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-            <span className="text-base font-black uppercase tracking-wider bg-teal-100 text-teal-950 px-4 py-1.5 rounded-full">
+          {/* Slot Header + Read Aloud */}
+          <div className="flex items-center justify-between pb-5 border-b-2 border-slate-200">
+            <span className="text-lg font-black uppercase tracking-wider bg-teal-100 text-teal-950 px-5 py-2 rounded-full border border-teal-300">
               {currentDose.scheduled_slot.toUpperCase()} DOSE
             </span>
 
             <button
               onClick={handleReadAloud}
-              className="flex items-center space-x-2 px-4 py-2 rounded-2xl bg-amber-100 hover:bg-amber-200 text-amber-950 font-bold text-sm border border-amber-300 transition-all cursor-pointer"
+              className="flex items-center space-x-2.5 px-5 py-3 rounded-2xl bg-amber-100 hover:bg-amber-200 text-amber-950 font-black text-base border-2 border-amber-400 transition-all cursor-pointer shadow-xs"
             >
-              <Volume2 className="w-5 h-5 text-amber-800" />
-              <span>Read Aloud</span>
+              <Volume2 className={`w-6 h-6 text-amber-800 ${isSpeaking ? 'animate-bounce text-rose-600' : ''}`} />
+              <span>{isSpeaking ? 'Speaking...' : 'Read Aloud'}</span>
             </button>
           </div>
 
-          {/* Huge Drug Title */}
-          <div className="space-y-2">
-            <h2 className="text-3xl sm:text-4xl font-black text-[#0B1E33] leading-tight">
-              {currentDose.medication_name}
-            </h2>
-            <div className="inline-block bg-teal-50 text-teal-900 text-xl font-bold px-4 py-1.5 rounded-xl border border-teal-200">
-              Dosage: {currentDose.dosage} ({currentDose.form || 'Tablet'})
+          {/* Giant Medicine Name (40px+) */}
+          <div className="space-y-3">
+            <div className="flex items-center space-x-4">
+              {/* Pill Colour Swatch */}
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-teal-600 to-emerald-500 text-white flex items-center justify-center text-2xl font-black shadow-md">
+                💊
+              </div>
+              <div>
+                <h2 className="text-4xl sm:text-5xl font-black text-slate-950 leading-tight font-serif">
+                  {currentDose.medication_name}
+                </h2>
+                <div className="text-2xl font-black text-teal-800 mt-1">
+                  Dosage: {currentDose.dosage} ({currentDose.form || 'Tablet'})
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Doctor Instructions in large clear text */}
-          {currentDose.instructions && (
-            <div className="p-5 bg-slate-50 rounded-2xl border-2 border-slate-200 text-lg text-slate-800 font-medium leading-relaxed">
-              <strong>Instructions:</strong> {currentDose.instructions}
-              {currentDose.meal_timing && (
-                <div className="text-teal-800 font-bold mt-1">
-                  Timing: {currentDose.meal_timing.replace('_', ' ')}
-                </div>
-              )}
+          {/* Food Instructions with Icon */}
+          <div className="p-6 bg-amber-50/80 rounded-2xl border-3 border-amber-300 text-xl text-slate-900 font-bold leading-relaxed space-y-2">
+            <div className="flex items-center space-x-3 text-amber-900 font-black">
+              <Utensils className="w-6 h-6 text-amber-700" />
+              <span>Meal Timing: {currentDose.meal_timing ? currentDose.meal_timing.replace('_', ' ').toUpperCase() : 'AFTER FOOD'}</span>
             </div>
-          )}
+            {currentDose.instructions && (
+              <p className="text-lg text-slate-800 font-medium pt-1">
+                {currentDose.instructions}
+              </p>
+            )}
+          </div>
 
-          {/* Oversized Confirm / Skip Buttons */}
-          <div className="pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Massive 80px+ Confirmation Button */}
+          <div className="space-y-4 pt-2">
             <button
               onClick={handleConfirmTaken}
-              className="py-5 px-6 rounded-3xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xl shadow-xl shadow-emerald-700/30 flex items-center justify-center space-x-3 transition-all cursor-pointer"
+              style={{ minHeight: '84px' }}
+              className="w-full py-6 px-8 rounded-3xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-2xl sm:text-3xl shadow-xl shadow-emerald-700/30 flex items-center justify-center space-x-4 transition-all cursor-pointer active:scale-98"
             >
-              <Check className="w-8 h-8 stroke-[3]" />
+              <Check className="w-10 h-10 stroke-[3.5]" />
               <span>YES, I TOOK THIS PILL</span>
             </button>
 
             <button
               onClick={handleSkipDose}
-              className="py-5 px-6 rounded-3xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-black text-lg border-2 border-slate-300 flex items-center justify-center space-x-2 transition-all cursor-pointer"
+              style={{ minHeight: '56px' }}
+              className="w-full py-4 px-6 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-lg border-2 border-slate-300 flex items-center justify-center space-x-2 transition-all cursor-pointer"
             >
-              <X className="w-6 h-6 stroke-[3]" />
-              <span>I Am Skipping This Dose</span>
+              <X className="w-6 h-6" />
+              <span>Not Now / Skip This Dose</span>
             </button>
           </div>
 
-          {/* Safety Warning */}
-          <div className="p-4 bg-amber-50 rounded-2xl border border-amber-300 text-xs sm:text-sm text-amber-950 font-bold flex items-center space-x-2.5">
-            <ShieldCheck className="w-5 h-5 text-amber-700 shrink-0" />
-            <span>Important: Never take a double dose to make up for a missed one.</span>
+          {/* Clinical Safety Protocol notice */}
+          <div className="p-4 bg-teal-50 rounded-2xl border-2 border-teal-300 text-sm text-teal-950 font-bold flex items-center space-x-3">
+            <ShieldCheck className="w-6 h-6 text-teal-700 shrink-0" />
+            <span>Safety Protocol: Never take a double dose to make up for a missed one.</span>
           </div>
 
         </div>
       )}
 
-      {/* Emergency & Family Call Bar */}
-      <div className="p-6 bg-rose-50 rounded-3xl border-2 border-rose-300 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center space-x-3 text-center sm:text-left">
-          <div className="w-12 h-12 rounded-2xl bg-rose-600 text-white flex items-center justify-center shrink-0">
-            <PhoneCall className="w-6 h-6" />
+      {/* Emergency & Family Call Bar (Always Visible at Bottom) */}
+      <div className="p-6 bg-rose-50 rounded-3xl border-3 border-rose-400 shadow-md flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center space-x-4 text-center sm:text-left">
+          <div className="w-14 h-14 rounded-2xl bg-rose-600 text-white flex items-center justify-center shrink-0 shadow-md">
+            <PhoneCall className="w-8 h-8" />
           </div>
           <div>
-            <div className="text-base font-bold text-rose-950">
+            <div className="text-xl font-black text-rose-950 font-serif">
               Need Help? Call Family
             </div>
-            <div className="text-sm font-semibold text-rose-800">
+            <div className="text-base font-bold text-rose-800">
               {activePatient?.emergency_contact_name || 'Emergency Contact'}:{' '}
               {activePatient?.emergency_contact_phone || 'Not configured'}
             </div>
@@ -242,9 +262,9 @@ export const ElderDashboardPage: React.FC<ElderDashboardPageProps> = ({ onBackTo
         {activePatient?.emergency_contact_phone && (
           <a
             href={`tel:${activePatient.emergency_contact_phone}`}
-            className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-black text-base shadow-md flex items-center justify-center space-x-2 transition-all"
+            className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xl shadow-lg flex items-center justify-center space-x-3 transition-all"
           >
-            <PhoneCall className="w-5 h-5" />
+            <PhoneCall className="w-6 h-6" />
             <span>Call Now</span>
           </a>
         )}
@@ -253,3 +273,5 @@ export const ElderDashboardPage: React.FC<ElderDashboardPageProps> = ({ onBackTo
     </div>
   );
 };
+
+export default ElderDashboardPage;

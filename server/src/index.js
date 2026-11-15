@@ -7,7 +7,11 @@ import { fileURLToPath } from 'node:url';
 
 import { initDatabase } from './db/database.js';
 import { apiRateLimiter } from './middleware/rateLimiter.js';
-import { checkAndEscalateDoses } from './services/escalationService.js';
+import {
+  checkAndEscalateDoses,
+  checkAndSendAppointmentReminders,
+  checkAndSendUpcomingDoseReminders
+} from './services/escalationService.js';
 
 // Route imports
 import authRoutes from './routes/auth.js';
@@ -125,11 +129,17 @@ const server = app.listen(PORT, () => {
   console.log(`=======================================================`);
 });
 
-// Reliable background escalation runner every 10 minutes
+// Reliable background escalation and reminder runner every 10 minutes
 const ESCALATION_INTERVAL_MS = 10 * 60 * 1000;
 setInterval(() => {
   checkAndEscalateDoses().catch(err => {
     console.error('[Background Escalation Error]:', err.message);
+  });
+  checkAndSendAppointmentReminders().catch(err => {
+    console.error('[Background Appointment Reminder Error]:', err.message);
+  });
+  checkAndSendUpcomingDoseReminders().catch(err => {
+    console.error('[Background Upcoming Dose Error]:', err.message);
   });
 }, ESCALATION_INTERVAL_MS);
 

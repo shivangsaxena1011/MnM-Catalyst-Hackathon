@@ -72,8 +72,8 @@ export const NotificationsPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-[#0B1E33]">Alerts & Notifications</h1>
-          <p className="text-xs text-slate-500 font-medium">
+          <h1 className="text-2xl font-extrabold text-slate-900 font-serif">Alerts & Notifications</h1>
+          <p className="text-xs sm:text-sm text-slate-500 font-medium">
             Central audit inbox for dose reminders, caregiver escalations, and appointments
           </p>
         </div>
@@ -82,7 +82,7 @@ export const NotificationsPage: React.FC = () => {
           <button
             onClick={handleSimulateEscalation}
             disabled={simulating}
-            className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md transition-all flex items-center space-x-1.5 cursor-pointer disabled:opacity-50"
+            className="px-4 py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md transition-all flex items-center space-x-1.5 cursor-pointer disabled:opacity-50"
             title="Trigger a test dose escalation alert"
           >
             <PlayCircle className="w-4 h-4" />
@@ -91,7 +91,7 @@ export const NotificationsPage: React.FC = () => {
 
           <button
             onClick={handleMarkAllRead}
-            className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors flex items-center space-x-1.5 cursor-pointer"
+            className="px-4 py-2.5 rounded-2xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs transition-colors flex items-center space-x-1.5 cursor-pointer shadow-2xs"
           >
             <CheckCheck className="w-4 h-4" />
             <span>Mark All Read</span>
@@ -102,8 +102,8 @@ export const NotificationsPage: React.FC = () => {
       {/* Honest SMTP Delivery Status Banner */}
       <div className={`p-4 rounded-3xl border flex items-start space-x-3 text-xs leading-relaxed ${
         smtpConfigured
-          ? 'bg-emerald-50 border-emerald-200 text-emerald-950'
-          : 'bg-amber-50 border-amber-200 text-amber-950'
+          ? 'bg-emerald-50/80 border-emerald-300 text-emerald-950'
+          : 'bg-amber-50/80 border-amber-300 text-amber-950'
       }`}>
         <Mail className={`w-5 h-5 shrink-0 mt-0.5 ${smtpConfigured ? 'text-emerald-600' : 'text-amber-600'}`} />
         <div>
@@ -120,10 +120,10 @@ export const NotificationsPage: React.FC = () => {
       {loading ? (
         <div className="py-12 text-center text-slate-400 text-xs">Loading notifications...</div>
       ) : notifications.length === 0 ? (
-        <div className="bg-white rounded-3xl p-12 text-center border border-slate-200/80">
-          <Bell className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <h3 className="text-base font-bold text-slate-800">No Notifications</h3>
-          <p className="text-xs text-slate-400 mt-1">You are all caught up on caregiver alerts and reminders.</p>
+        <div className="glass-card p-12 text-center max-w-lg mx-auto space-y-2">
+          <Bell className="w-12 h-12 text-slate-300 mx-auto mb-2" />
+          <h3 className="text-base font-bold text-slate-800 font-serif">No Notifications</h3>
+          <p className="text-xs text-slate-500">You are all caught up on caregiver alerts and reminders.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -135,19 +135,19 @@ export const NotificationsPage: React.FC = () => {
               <div
                 key={notif.id}
                 onClick={() => !isRead && handleMarkRead(notif.id)}
-                className={`bg-white rounded-3xl p-5 border transition-all cursor-pointer ${
-                  !isRead ? 'border-teal-300 shadow-sm ring-1 ring-teal-400/20' : 'border-slate-200/80 opacity-80'
-                } ${isCritical && !isRead ? 'bg-rose-50/40 border-rose-300' : ''}`}
+                className={`glass-card p-5 transition-all cursor-pointer ${
+                  !isRead ? 'border-teal-300 shadow-sm ring-1 ring-teal-400/20 bg-white/95' : 'opacity-85'
+                } ${isCritical && !isRead ? 'bg-rose-50/50 border-rose-300 ring-rose-400/20' : ''}`}
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start space-x-3.5">
                     <div
-                      className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 font-bold ${
+                      className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 font-bold shadow-xs ${
                         isCritical
                           ? 'bg-rose-600 text-white'
                           : notif.type === 'appointment'
                           ? 'bg-teal-600 text-white'
-                          : 'bg-slate-100 text-slate-700'
+                          : 'bg-amber-100 text-amber-900'
                       }`}
                     >
                       {isCritical ? <ShieldAlert className="w-5 h-5" /> : notif.type === 'appointment' ? <Clock className="w-5 h-5" /> : <Bell className="w-5 h-5" />}
@@ -155,13 +155,13 @@ export const NotificationsPage: React.FC = () => {
 
                     <div>
                       <div className="flex items-center space-x-2">
-                        <span className="text-xs font-bold text-slate-900">{notif.title}</span>
+                        <span className="text-sm font-bold text-slate-900 font-serif">{notif.title}</span>
                         <span
                           className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
                             notif.priority === 'critical'
-                              ? 'bg-rose-100 text-rose-800'
+                              ? 'bg-rose-100 text-rose-800 border border-rose-200'
                               : notif.priority === 'high'
-                              ? 'bg-amber-100 text-amber-800'
+                              ? 'bg-amber-100 text-amber-800 border border-amber-200'
                               : 'bg-slate-100 text-slate-600'
                           }`}
                         >
@@ -188,7 +188,7 @@ export const NotificationsPage: React.FC = () => {
                         e.stopPropagation();
                         handleMarkRead(notif.id);
                       }}
-                      className="text-xs text-teal-700 hover:text-teal-900 font-semibold shrink-0"
+                      className="text-xs text-teal-700 hover:text-teal-900 font-bold shrink-0 cursor-pointer"
                     >
                       Mark read
                     </button>
@@ -203,3 +203,5 @@ export const NotificationsPage: React.FC = () => {
     </div>
   );
 };
+
+export default NotificationsPage;

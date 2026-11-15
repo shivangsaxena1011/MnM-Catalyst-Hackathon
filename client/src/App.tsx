@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ElderModeProvider, useElderMode } from './context/ElderModeContext';
 import { Navbar } from './components/Navbar';
@@ -79,7 +80,7 @@ const MainApp: React.FC = () => {
 
   // Active Authenticated View
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
+    <div className="min-h-screen bg-[#FFF8F1] flex flex-col text-slate-800">
       <Navbar
         onOpenAi={() => setAiModalOpen(true)}
         onNavigate={page => setCurrentPage(page)}
@@ -98,36 +99,47 @@ const MainApp: React.FC = () => {
           />
         )}
 
-        {/* Main Content Pane */}
+        {/* Main Content Pane with Smooth Page Transitions */}
         <main className={`flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto ${currentPage === 'elder' ? 'w-full' : ''}`}>
-          {currentPage === 'dashboard' && (
-            <DashboardPage
-              onNavigate={page => setCurrentPage(page)}
-              onOpenAi={() => setAiModalOpen(true)}
-            />
-          )}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentPage}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              className="w-full"
+            >
+              {currentPage === 'dashboard' && (
+                <DashboardPage
+                  onNavigate={page => setCurrentPage(page)}
+                  onOpenAi={() => setAiModalOpen(true)}
+                />
+              )}
 
-          {currentPage === 'elder' && (
-            <ElderDashboardPage
-              onBackToStandard={() => setCurrentPage('dashboard')}
-              onOpenAi={() => setAiModalOpen(true)}
-            />
-          )}
+              {currentPage === 'elder' && (
+                <ElderDashboardPage
+                  onBackToStandard={() => setCurrentPage('dashboard')}
+                  onOpenAi={() => setAiModalOpen(true)}
+                />
+              )}
 
-          {currentPage === 'medications' && <MedicationsPage />}
-          {currentPage === 'history' && <HistoryPage />}
-          {currentPage === 'appointments' && <AppointmentsPage />}
-          {currentPage === 'care-circle' && <CareCirclePage />}
-          {currentPage === 'notifications' && <NotificationsPage />}
-          {currentPage === 'timeline' && <TimelinePage />}
-          {currentPage === 'settings' && <SettingsPage />}
+              {currentPage === 'medications' && <MedicationsPage />}
+              {currentPage === 'history' && <HistoryPage />}
+              {currentPage === 'appointments' && <AppointmentsPage />}
+              {currentPage === 'care-circle' && <CareCirclePage />}
+              {currentPage === 'notifications' && <NotificationsPage />}
+              {currentPage === 'timeline' && <TimelinePage />}
+              {currentPage === 'settings' && <SettingsPage />}
 
-          {currentPage === 'onboarding' && (
-            <OnboardingPage
-              onBack={() => setCurrentPage('dashboard')}
-              onSuccess={() => setCurrentPage('dashboard')}
-            />
-          )}
+              {currentPage === 'onboarding' && (
+                <OnboardingPage
+                  onBack={() => setCurrentPage('dashboard')}
+                  onSuccess={() => setCurrentPage('dashboard')}
+                />
+              )}
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
 

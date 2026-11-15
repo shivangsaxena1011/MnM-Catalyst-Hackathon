@@ -1,7 +1,7 @@
 import express from 'express';
 import { db } from '../db/database.js';
 import { requireAuth, requirePatientAccess, requireEditPermission } from '../middleware/auth.js';
-import { sendNotificationEmail } from '../services/emailService.js';
+import { sendNotificationEmail, buildAppointmentEmail } from '../services/emailService.js';
 
 const router = express.Router();
 
@@ -87,14 +87,36 @@ router.post('/:patientId', requireAuth, requirePatientAccess, requireEditPermiss
       WHERE cc.patient_id = ?
     `).all(patientId);
 
+    const notifMsg = `${patient.full_name} has an appointment with Dr. ${doctor_name} (${specialty}) at ${clinic_hospital} on ${appointment_date} at ${appointment_time}.`;
+    const emailHtml = buildAppointmentEmail({
+      patientName: patient.full_name,
+      doctorName: doctor_name.trim(),
+      specialty: specialty.trim(),
+      hospital: clinic_hospital.trim(),
+      appointmentDate: appointment_date,
+      appointmentTime: appointment_time,
+      notes: notes ? notes.trim() : null,
+    });
+
     for (const m of members) {
+      let emailStatus = 'not_applicable';
+      if (m.email) {
+        sendNotificationEmail({
+          to: m.email,
+          subject: `🗓️ [SAATHI CARE] Appointment Scheduled for ${patient.full_name}`,
+          htmlContent: emailHtml,
+          textFallback: notifMsg,
+        }).catch(e => console.error('[Appointment Email Error]:', e.message));
+      }
+
       db.prepare(`
-        INSERT INTO notifications (patient_id, user_id, title, message, type, priority)
-        VALUES (?, ?, 'Upcoming Doctor Appointment', ?, 'appointment', 'medium')
+        INSERT INTO notifications (patient_id, user_id, title, message, type, priority, email_status)
+        VALUES (?, ?, 'Upcoming Doctor Appointment', ?, 'appointment', 'medium', ?)
       `).run(
         patientId,
         m.user_id,
-        `${patient.full_name} has an appointment with Dr. ${doctor_name} (${specialty}) on ${appointment_date} at ${appointment_time}.`
+        notifMsg,
+        emailStatus
       );
     }
 

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'motion/react';
 import { Appointment } from '../types';
 import { X, Calendar } from 'lucide-react';
 
@@ -49,8 +50,14 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({ initia
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in overflow-y-auto">
-      <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-100 relative my-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-md overflow-y-auto">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.94, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.94 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+        className="glass-card max-w-lg w-full p-6 sm:p-8 shadow-2xl relative my-8 bg-white/95"
+      >
         <button
           onClick={onClose}
           className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100 transition-colors"
@@ -185,13 +192,13 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({ initia
             <button
               type="submit"
               disabled={submitting}
-              className="px-5 py-2.5 rounded-xl text-sm font-bold bg-[#0D9488] hover:bg-[#0F766E] text-white shadow-lg shadow-teal-700/20 transition-all cursor-pointer disabled:opacity-50"
+              className="px-5 py-2.5 rounded-2xl text-sm font-bold signature-btn text-white shadow-md transition-all cursor-pointer disabled:opacity-50"
             >
               {submitting ? 'Saving...' : initialAppt ? 'Save Changes' : 'Confirm Appointment'}
             </button>
           </div>
         </form>
-      </div>
+      </motion.div>
     </div>
   );
 };

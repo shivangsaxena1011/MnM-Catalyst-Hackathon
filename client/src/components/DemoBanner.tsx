@@ -42,16 +42,16 @@ export const DemoBanner: React.FC = () => {
   const isDemoActive = activePatient?.invite_code === 'SAATHI-DEMO' || activePatient?.full_name === 'Ramesh Sharma';
 
   return (
-    <div className="bg-gradient-to-r from-slate-900 via-[#0B1E33] to-[#0F2942] text-white px-4 py-2.5 shadow-sm border-b border-teal-500/30">
+    <div className="bg-gradient-to-r from-[#0F766E] via-[#14B8A6] to-[#FB7185] text-white px-4 py-2 shadow-xs border-b border-amber-200/40 relative z-30">
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs sm:text-sm">
         <div className="flex items-center space-x-2">
-          <span className="bg-teal-500/20 text-teal-300 font-bold px-2 py-0.5 rounded text-[11px] border border-teal-400/30">
+          <span className="bg-white/20 text-white font-black px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider backdrop-blur-xs">
             HACKATHON EVALUATION
           </span>
-          <span className="text-slate-300 font-medium">
+          <span className="text-white/95 font-medium">
             {isDemoActive ? (
-              <span className="text-emerald-300 font-semibold flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5" />
+              <span className="text-amber-100 font-bold flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5 text-white" />
                 Demo Profile Active: Ramesh Sharma (72y, Hypertension & Type 2 Diabetes)
               </span>
             ) : (
@@ -62,7 +62,7 @@ export const DemoBanner: React.FC = () => {
 
         <div className="flex items-center space-x-2">
           {bannerMsg && (
-            <span className="text-emerald-400 font-medium animate-pulse hidden md:inline">
+            <span className="text-amber-200 font-bold animate-pulse hidden md:inline">
               {bannerMsg}
             </span>
           )}
@@ -71,16 +71,16 @@ export const DemoBanner: React.FC = () => {
             <button
               onClick={handleSeed}
               disabled={loading}
-              className="bg-teal-600 hover:bg-teal-500 text-white font-semibold px-3 py-1 rounded-lg text-xs flex items-center space-x-1.5 transition-all shadow-sm cursor-pointer disabled:opacity-50"
+              className="bg-white text-teal-950 font-bold px-3.5 py-1 rounded-xl text-xs flex items-center space-x-1.5 transition-all shadow-sm hover:bg-amber-50 cursor-pointer disabled:opacity-50"
             >
-              <Sparkles className="w-3.5 h-3.5 text-teal-200" />
+              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
               <span>{loading ? 'Loading...' : 'Load Judge Demo Profile'}</span>
             </button>
           ) : (
             <button
               onClick={handleReset}
               disabled={loading}
-              className="bg-rose-900/60 hover:bg-rose-800 text-rose-200 border border-rose-700/50 font-semibold px-2.5 py-1 rounded-lg text-xs flex items-center space-x-1 transition-all cursor-pointer disabled:opacity-50"
+              className="bg-rose-950/40 hover:bg-rose-900 text-white border border-white/30 font-bold px-2.5 py-1 rounded-xl text-xs flex items-center space-x-1 transition-all cursor-pointer disabled:opacity-50"
             >
               <Trash2 className="w-3.5 h-3.5" />
               <span>Reset Demo</span>
