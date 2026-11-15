@@ -557,8 +557,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
             <span className="font-bold text-slate-800">SAATHI CARE</span>
             <span>— PromptWars × Catalyst MVP</span>
           </div>
-          <div>
-            Built with React 19, Tailwind v4, Three.js & Node.js • Live on Render
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-slate-600">
+            <span>
+              Developed by <strong className="font-semibold text-slate-900">Shivang Saxena</strong>
+            </span>
+            <span className="hidden sm:inline text-slate-300">•</span>
+            <span>Built with React 19, Tailwind v4, Three.js & Node.js</span>
           </div>
         </div>
       </footer>

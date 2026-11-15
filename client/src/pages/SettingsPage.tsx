@@ -200,6 +200,31 @@ export const SettingsPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Section 4: Project & Developer Attribution */}
+        <div className="glass-card p-6 space-y-4">
+          <div className="flex items-center space-x-3 pb-3 border-b border-amber-100">
+            <div className="w-10 h-10 rounded-2xl bg-teal-100 text-teal-800 flex items-center justify-center font-bold">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-slate-900 font-serif">About SAATHI CARE</h2>
+              <p className="text-xs text-slate-500">Engineering credits & platform version</p>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-amber-50/50 border border-amber-200/50">
+            <div>
+              <div className="font-bold text-slate-900 text-sm">Developed by Shivang Saxena</div>
+              <p className="text-xs text-slate-600 mt-0.5">
+                PromptWars × Catalyst Hackathon MVP • MIT Licensed
+              </p>
+            </div>
+            <div className="text-xs font-bold text-teal-800 bg-teal-50 border border-teal-200 px-3 py-1.5 rounded-xl self-start sm:self-center">
+              v1.0.0 Production
+            </div>
+          </div>
+        </div>
+
       </div>
 
     </div>

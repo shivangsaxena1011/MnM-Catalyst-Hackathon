@@ -82,6 +82,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate }) => 
             Never double a missed dose. If overdue, follow physician advice and log accurate status.
           </p>
         </div>
+
+        {/* Developer Attribution */}
+        <div className="mt-4 px-2 py-1 text-[11px] text-slate-400 text-center">
+          Developed by <span className="font-semibold text-slate-700">Shivang Saxena</span>
+        </div>
       </aside>
 
       {/* Mobile Floating Bottom Bar */}
