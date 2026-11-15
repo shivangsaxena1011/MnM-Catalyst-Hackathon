@@ -97,10 +97,14 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onBack, onSucces
         </button>
 
         <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-3xl bg-teal-100 text-teal-700 flex items-center justify-center mx-auto mb-3 shadow-sm">
-            <HeartHandshake className="w-8 h-8" />
+          <div className="flex justify-center mb-4">
+            <img
+              src="/logo.png"
+              alt="SAATHI CARE - AI-Powered Eldercare"
+              className="h-14 sm:h-16 w-auto object-contain drop-shadow-sm"
+            />
           </div>
-          <h2 className="text-3xl font-extrabold text-[#0B1E33]">Care Circle Setup</h2>
+          <h2 className="text-3xl font-extrabold text-[#1e3a5f]">Care Circle Setup</h2>
           <p className="mt-1 text-sm text-slate-500">
             Set up an elder profile or connect with an existing family member’s circle
           </p>

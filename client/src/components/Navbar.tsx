@@ -33,21 +33,23 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAi, onNavigate, currentPag
         <div className="flex items-center justify-between h-18">
           
           {/* Logo & Brand */}
-          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => onNavigate('dashboard')}>
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-[#0F766E] to-[#0D9488] flex items-center justify-center shadow-md shadow-teal-700/20 text-white">
-              <HeartHandshake className="w-6 h-6" />
-            </div>
+          <div className="flex items-center space-x-3 cursor-pointer group" onClick={() => onNavigate('dashboard')}>
+            <img
+              src="/logo-icon.png"
+              alt="SAATHI CARE emblem"
+              className="w-10 h-10 object-contain drop-shadow-sm group-hover:scale-105 transition-transform"
+            />
             <div>
               <div className="flex items-center space-x-2">
-                <span className="font-extrabold text-xl tracking-tight text-[#0B1E33]">
-                  SAATHI <span className="text-[#0D9488]">CARE</span>
+                <span className="font-extrabold text-xl tracking-tight text-[#1e3a5f]">
+                  SAATHI <span className="text-[#f07147]">CARE</span>
                 </span>
                 <span className="text-[10px] font-bold uppercase tracking-wider bg-teal-100 text-teal-800 px-2 py-0.5 rounded-full">
                   MVP
                 </span>
               </div>
-              <p className="text-xs text-slate-500 font-medium hidden sm:block">
-                Elderly Care & Medication Circle
+              <p className="text-[11px] text-slate-500 font-medium tracking-wide hidden sm:block">
+                AI-POWERED ELDERCARE
               </p>
             </div>
           </div>

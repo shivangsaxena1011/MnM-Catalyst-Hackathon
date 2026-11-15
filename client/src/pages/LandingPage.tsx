@@ -17,6 +17,31 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
         🏆 Built for <strong>PromptWars × Catalyst</strong> — Intelligent Elderly Care & Medication Management
       </div>
 
+      {/* Navigation Header */}
+      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between border-b border-slate-200/60 bg-white/70 backdrop-blur-md">
+        <div className="flex items-center space-x-3">
+          <img
+            src="/logo.png"
+            alt="SAATHI CARE - AI-Powered Eldercare"
+            className="h-10 sm:h-11 w-auto object-contain drop-shadow-xs"
+          />
+        </div>
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={onLogin}
+            className="px-4 py-2 text-sm font-bold text-slate-700 hover:text-[#1e3a5f] transition-colors cursor-pointer"
+          >
+            Sign In with PIN
+          </button>
+          <button
+            onClick={onGetStarted}
+            className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white font-bold text-sm shadow-md shadow-teal-700/20 transition-all cursor-pointer"
+          >
+            Start Care Circle
+          </button>
+        </div>
+      </nav>
+
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-12 pb-20 lg:pt-20 lg:pb-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -80,9 +105,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
                 {/* Live Pill Status Badge */}
                 <div className="flex items-center justify-between pb-4 border-b border-slate-100">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-2xl bg-teal-100 text-teal-700 flex items-center justify-center font-bold">
-                      <HeartHandshake className="w-5 h-5" />
-                    </div>
+                    <img
+                      src="/logo-icon.png"
+                      alt="SAATHI emblem"
+                      className="w-10 h-10 object-contain drop-shadow-xs"
+                    />
                     <div>
                       <h4 className="font-bold text-slate-900 text-sm">Ramesh Sharma (72y)</h4>
                       <p className="text-xs text-slate-500">Care Circle: Daughter + Nurse</p>

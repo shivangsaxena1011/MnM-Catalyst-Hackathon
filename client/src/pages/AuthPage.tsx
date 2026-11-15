@@ -85,10 +85,14 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onBack, onSuccess }) => {
         </button>
 
         <div className="text-center">
-          <div className="w-14 h-14 rounded-3xl bg-gradient-to-tr from-teal-700 to-teal-500 flex items-center justify-center text-white mx-auto shadow-lg shadow-teal-700/20 mb-3">
-            <HeartHandshake className="w-8 h-8" />
+          <div className="flex justify-center mb-3">
+            <img
+              src="/logo.png"
+              alt="SAATHI CARE - AI-Powered Eldercare"
+              className="h-14 sm:h-16 w-auto object-contain drop-shadow-sm"
+            />
           </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0B1E33] tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1e3a5f] tracking-tight">
             {tab === 'register' ? 'Create Your Account' : 'Welcome to SAATHI CARE'}
           </h2>
           <p className="mt-1 text-sm text-slate-500">

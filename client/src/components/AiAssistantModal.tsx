@@ -138,7 +138,7 @@ export const AiAssistantModal: React.FC<AiAssistantModalProps> = ({ isOpen, onCl
           <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-5 animate-in fade-in space-y-4">
             <div className="flex items-center justify-between text-xs text-slate-500 border-b border-slate-200/80 pb-2">
               <span className="font-semibold text-teal-700 flex items-center gap-1.5">
-                <HeartHandshake className="w-4 h-4" />
+                <img src="/logo-icon.png" alt="" className="w-4 h-4 object-contain inline-block" />
                 <span>Guidance for {activePatient?.full_name || 'Patient'}</span>
               </span>
               <span className="bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-[10px] uppercase font-bold">
