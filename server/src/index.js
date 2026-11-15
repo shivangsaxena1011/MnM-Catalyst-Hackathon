@@ -37,6 +37,9 @@ const defaultOrigins = [
   'http://127.0.0.1:5173',
   'http://127.0.0.1:5000',
 ];
+if (process.env.RENDER_EXTERNAL_URL) {
+  defaultOrigins.push(process.env.RENDER_EXTERNAL_URL);
+}
 const envOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map(s => s.trim()).filter(Boolean)
   : [];
@@ -44,12 +47,20 @@ const allowedOrigins = new Set([...defaultOrigins, ...envOrigins]);
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow server-to-server or non-browser tools (curl, postman, test runner) where origin is undefined
-    if (!origin || allowedOrigins.has(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error(`CORS policy violation: Origin '${origin}' is not allowed`));
+    // Allow server-to-server, curl, mobile apps or same-origin where origin is undefined
+    if (!origin) {
+      return callback(null, true);
     }
+    // Allow explicitly configured origins or any *.onrender.com deployment
+    if (
+      allowedOrigins.has(origin) ||
+      origin.endsWith('.onrender.com') ||
+      origin.includes('localhost') ||
+      origin.includes('127.0.0.1')
+    ) {
+      return callback(null, true);
+    }
+    callback(new Error(`CORS policy violation: Origin '${origin}' is not allowed`));
   },
   credentials: true,
 }));
