@@ -10,6 +10,7 @@ interface AuthContextType {
   login: (payload: { email: string; password: string }) => Promise<void>;
   passcodeLogin: (payload: { email: string; passcode: string }) => Promise<void>;
   register: (payload: { name: string; email: string; password: string; passcode?: string; role: string; phone?: string }) => Promise<void>;
+  loginAsGuest: () => Promise<void>;
   logout: () => void;
   selectPatient: (patientId: number) => void;
   refreshPatients: () => Promise<void>;
@@ -98,6 +99,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await refreshPatients();
   };
 
+  const loginAsGuest = async () => {
+    const res = await api.demo.guest();
+    localStorage.setItem('saathi_token', res.token);
+    setUser(res.user);
+    await refreshPatients();
+  };
+
   const logout = () => {
     localStorage.removeItem('saathi_token');
     localStorage.removeItem('saathi_active_patient_id');
@@ -124,6 +132,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         passcodeLogin,
         register,
+        loginAsGuest,
         logout,
         selectPatient,
         refreshPatients,

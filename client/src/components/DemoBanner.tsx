@@ -4,11 +4,36 @@ import { useAuth } from '../context/AuthContext';
 import { Sparkles, Trash2, CheckCircle2 } from 'lucide-react';
 
 export const DemoBanner: React.FC = () => {
-  const { user, refreshPatients, activePatient } = useAuth();
+  const { user, refreshPatients, activePatient, logout } = useAuth();
   const [loading, setLoading] = useState(false);
   const [bannerMsg, setBannerMsg] = useState<string | null>(null);
 
   if (!user) return null;
+
+  // Requirement 7: Guest Demo user slim banner
+  if (user.email?.endsWith('@demo.saathi.care')) {
+    return (
+      <div className="bg-gradient-to-r from-amber-600 via-orange-600 to-rose-600 text-white px-4 py-1.5 shadow-xs border-b border-amber-300/30 relative z-30">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs sm:text-sm">
+          <div className="flex items-center space-x-2">
+            <span className="bg-white/20 text-white font-black px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider backdrop-blur-xs">
+              GUEST DEMO
+            </span>
+            <span className="text-white font-medium">
+              You're viewing a demo account — data resets periodically.
+            </span>
+          </div>
+          <button
+            onClick={() => logout()}
+            className="text-white hover:text-amber-100 font-bold underline underline-offset-2 flex items-center space-x-1 cursor-pointer transition-colors"
+          >
+            <span>Create your own Care Circle</span>
+            <span>→</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const handleSeed = async () => {
     setLoading(true);
@@ -39,7 +64,7 @@ export const DemoBanner: React.FC = () => {
     }
   };
 
-  const isDemoActive = activePatient?.invite_code === 'SAATHI-DEMO' || activePatient?.full_name === 'Ramesh Sharma';
+  const isDemoActive = Boolean(activePatient?.invite_code?.startsWith('SAATHI-DEMO') || activePatient?.full_name === 'Ramesh Sharma');
 
   return (
     <div className="bg-gradient-to-r from-[#0F766E] via-[#14B8A6] to-[#FB7185] text-white px-4 py-2 shadow-xs border-b border-amber-200/40 relative z-30">

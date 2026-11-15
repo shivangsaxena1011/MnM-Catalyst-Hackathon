@@ -634,6 +634,34 @@ async function runAuditTests() {
     // -------------------------------------------------------------
     console.log('\n--- TEST GROUP 11: Evaluator Demo Data Seeding & Reset ---');
 
+    // 1-Click Guest Demo (No signup)
+    const guestRes = await fetch(`${BASE_URL}/demo/guest`, {
+      method: 'POST',
+    });
+    const guestData = await guestRes.json();
+    assert(
+      guestRes.status === 201 &&
+      guestData.token &&
+      guestData.user &&
+      guestData.user.email.endsWith('@demo.saathi.care') &&
+      guestData.patientId,
+      'Positive: 1-Click Guest Demo initializes temporary user and seeds Ramesh Sharma'
+    );
+
+    // Verify guest token can access Ramesh Sharma's care dashboard
+    const guestPatientsRes = await fetch(`${BASE_URL}/patients`, {
+      headers: { 'Authorization': `Bearer ${guestData.token}` },
+    });
+    const guestPatientsData = await guestPatientsRes.json();
+    assert(
+      guestPatientsRes.ok &&
+      guestPatientsData.patients &&
+      guestPatientsData.patients.length > 0 &&
+      guestPatientsData.patients[0].full_name === 'Ramesh Sharma' &&
+      guestPatientsData.patients[0].invite_code.startsWith('SAATHI-DEMO-'),
+      'Positive: Guest user accesses seeded patient with unique invite code'
+    );
+
     const demoSeedRes = await fetch(`${BASE_URL}/demo/seed`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${seniorToken}` },

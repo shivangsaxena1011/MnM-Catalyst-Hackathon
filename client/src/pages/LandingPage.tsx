@@ -1,5 +1,6 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useState } from 'react';
 import { motion } from 'motion/react';
+import { useAuth } from '../context/AuthContext';
 import {
   ShieldCheck, Users, Pill, Clock, Sparkles,
   ArrowRight, CheckCircle2, ChevronRight, Volume2,
@@ -14,6 +15,19 @@ interface LandingPageProps {
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin }) => {
+  const { loginAsGuest } = useAuth();
+  const [demoLoading, setDemoLoading] = useState(false);
+
+  const handleGuestDemo = async () => {
+    setDemoLoading(true);
+    try {
+      await loginAsGuest();
+    } catch (err: any) {
+      alert(err.message || 'Failed to start demo');
+      setDemoLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#FFF8F1] text-slate-800 relative selection:bg-teal-100 selection:text-teal-900 overflow-x-hidden">
       
@@ -54,6 +68,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
         </div>
 
         <div className="flex items-center space-x-3">
+          <button
+            onClick={handleGuestDemo}
+            disabled={demoLoading}
+            className="hidden sm:flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300/80 font-bold text-xs shadow-xs cursor-pointer transition-all disabled:opacity-60"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+            <span>{demoLoading ? "Loading…" : "Try Demo"}</span>
+          </button>
           <button
             onClick={onLogin}
             className="px-4 py-2 text-sm font-bold text-slate-700 hover:text-teal-700 transition-colors cursor-pointer"
@@ -96,19 +118,27 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
                 SAATHI CARE connects seniors, family members, and caregivers into a unified Care Circle. Seniors manage medications independently with simple 4-digit PINs, while authorized families stay peacefully informed with 3-tier safety escalations.
               </p>
 
-              <div className="pt-2 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 flex-wrap">
+                <button
+                  onClick={handleGuestDemo}
+                  disabled={demoLoading}
+                  className="w-full sm:w-auto px-7 py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white font-extrabold text-base shadow-xl flex items-center justify-center space-x-2 cursor-pointer transition-all transform hover:-translate-y-0.5 disabled:opacity-60"
+                >
+                  <Sparkles className="w-5 h-5 text-amber-100" />
+                  <span>{demoLoading ? "Preparing Ramesh's care profile…" : "✨ Try Live Demo — no signup"}</span>
+                </button>
                 <button
                   onClick={onGetStarted}
-                  className="w-full sm:w-auto px-8 py-4 rounded-2xl signature-btn text-white font-bold text-base shadow-xl flex items-center justify-center space-x-2 cursor-pointer group"
+                  className="w-full sm:w-auto px-6 py-4 rounded-2xl signature-btn text-white font-bold text-base shadow-lg flex items-center justify-center space-x-2 cursor-pointer group"
                 >
                   <span>Start your Care Circle</span>
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
                 <button
                   onClick={onLogin}
-                  className="w-full sm:w-auto px-8 py-4 rounded-2xl glass hover:bg-white text-slate-800 font-bold text-base border border-slate-200/80 shadow-xs cursor-pointer transition-all"
+                  className="w-full sm:w-auto px-6 py-4 rounded-2xl glass hover:bg-white text-slate-800 font-bold text-sm border border-slate-200/80 shadow-xs cursor-pointer transition-all"
                 >
-                  Sign in with 4-Digit PIN
+                  Sign in with PIN
                 </button>
               </div>
 
@@ -492,17 +522,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
           <p className="text-lg text-slate-600 max-w-xl mx-auto">
             Set up an elder profile in less than 2 minutes. No credit card required.
           </p>
-          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3 flex-wrap">
+            <button
+              onClick={handleGuestDemo}
+              disabled={demoLoading}
+              className="w-full sm:w-auto px-7 py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white font-extrabold text-base shadow-xl flex items-center justify-center space-x-2 cursor-pointer transition-all disabled:opacity-60"
+            >
+              <Sparkles className="w-5 h-5 text-amber-100" />
+              <span>{demoLoading ? "Preparing Ramesh's care profile…" : "✨ Try Live Demo — no signup"}</span>
+            </button>
             <button
               onClick={onGetStarted}
-              className="w-full sm:w-auto px-8 py-4 rounded-2xl signature-btn text-white font-bold text-base shadow-xl flex items-center justify-center space-x-2 cursor-pointer"
+              className="w-full sm:w-auto px-7 py-4 rounded-2xl signature-btn text-white font-bold text-base shadow-xl flex items-center justify-center space-x-2 cursor-pointer"
             >
               <span>Get Started Now</span>
               <ArrowRight className="w-5 h-5" />
             </button>
             <button
               onClick={onLogin}
-              className="w-full sm:w-auto px-8 py-4 rounded-2xl glass hover:bg-white text-slate-800 font-bold text-base border border-slate-200/80 shadow-xs cursor-pointer"
+              className="w-full sm:w-auto px-6 py-4 rounded-2xl glass hover:bg-white text-slate-800 font-bold text-base border border-slate-200/80 shadow-xs cursor-pointer"
             >
               Sign In with PIN
             </button>

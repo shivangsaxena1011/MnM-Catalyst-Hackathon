@@ -6,7 +6,7 @@ import rateLimit from 'express-rate-limit';
  */
 export const authRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 15,
+  max: process.env.NODE_ENV === 'production' ? 15 : 150,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -20,7 +20,7 @@ export const authRateLimiter = rateLimit({
  */
 export const joinRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // Max 10 code verification attempts per 15 mins
+  max: process.env.NODE_ENV === 'production' ? 10 : 100,
   standardHeaders: true,
   legacyHeaders: false,
   message: {

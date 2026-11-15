@@ -8,8 +8,21 @@ interface AuthPageProps {
 }
 
 export const AuthPage: React.FC<AuthPageProps> = ({ onBack, onSuccess }) => {
-  const { login, passcodeLogin, register } = useAuth();
+  const { login, passcodeLogin, register, loginAsGuest } = useAuth();
   const [tab, setTab] = useState<'login' | 'passcode' | 'register'>('passcode');
+  const [guestLoading, setGuestLoading] = useState(false);
+
+  const handleGuestDemo = async () => {
+    setGuestLoading(true);
+    setError(null);
+    try {
+      await loginAsGuest();
+      onSuccess();
+    } catch (err: any) {
+      setError(err.message || 'Failed to start demo');
+      setGuestLoading(false);
+    }
+  };
 
   // Form states
   const [email, setEmail] = useState('');
@@ -392,6 +405,20 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onBack, onSuccess }) => {
               </form>
             )}
 
+          </div>
+
+          {/* Guest Demo link */}
+          <div className="mt-6 text-center">
+            <button
+              onClick={handleGuestDemo}
+              disabled={guestLoading || loading}
+              className="text-xs font-bold text-teal-700 hover:text-teal-900 transition-colors inline-flex items-center space-x-1 cursor-pointer disabled:opacity-50"
+            >
+              <span className="text-slate-500 font-normal">Just exploring?</span>
+              <span className="underline underline-offset-2">
+                {guestLoading ? "Preparing Ramesh's care profile…" : "Try the demo →"}
+              </span>
+            </button>
           </div>
 
         </div>

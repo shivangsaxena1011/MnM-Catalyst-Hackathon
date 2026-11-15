@@ -218,6 +218,10 @@ export const api = {
 
   // Judge Demo Data
   demo: {
+    guest: () =>
+      request<{ message: string; token: string; user: User; patientId?: number }>('/demo/guest', {
+        method: 'POST',
+      }),
     seed: () =>
       request<{ message: string; patientId: number }>('/demo/seed', {
         method: 'POST',

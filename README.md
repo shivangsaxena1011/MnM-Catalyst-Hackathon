@@ -181,11 +181,10 @@ Follow this step-by-step evaluation guide on the live deployment:
 Navigate to **[https://saathi-care-41gq.onrender.com](https://saathi-care-41gq.onrender.com)**.  
 *Observe:* The responsive landing page, procedural 3D hero scene with floating medication capsules, animated stats strip, 3-step care workflow, and interactive bento grid.
 
-### 2. Sign In & Load Judge Demo Profile
-- Click **"Sign In"** in the top navigation.
-- Click **"Create an account"** or log in with any test credentials.
-- Look at the top banner: Click **"Load Judge Demo Profile"**.
-- *Instant Result:* The system seeds an authentic clinical case for **Ramesh Sharma (72y)** with Type 2 Diabetes & Hypertension, 3 prescribed medications, 7-day adherence history, an upcoming cardiologist appointment, and an active overdue dose escalation alert.
+### 2. Instant 1-Click Guest Demo (Zero Registration)
+- Simply click **"✨ Try Live Demo — no signup"** directly on the landing page or on the sign-in screen.
+- *Instant Result:* Zero forms to fill. The system instantly initializes a temporary evaluator session and preloads the authentic clinical case for **Ramesh Sharma (72y)** with Type 2 Diabetes & Hypertension, 3 prescribed medications, 7-day adherence history, an upcoming cardiologist appointment, and an active overdue dose escalation alert.
+- Alternatively, judges can sign up/sign in normally and click **"Load Judge Demo Profile"** in the evaluation banner at any time.
 
 ### 3. Explore the Caregiver Dashboard
 - **Adherence Ring:** View the live SVG circular adherence progress ring.
