@@ -1,259 +1,288 @@
+<div align="center">
+
 # SAATHI CARE 🩺
-### *Intelligent Elderly Healthcare & Collaborative Medication Ecosystem*
 
-[![Live Platform](https://img.shields.io/badge/Live%20Platform-saathi--care--41gq.onrender.com-0D9488?style=for-the-badge&logo=render&logoColor=white)](https://saathi-care-41gq.onrender.com)
-[![CI Status](https://img.shields.io/github/actions/workflow/status/shivangsaxena1011/MnM-Catalyst-Hackathon/ci.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white&label=CI%20Build%20%26%20Tests)](https://github.com/shivangsaxena1011/MnM-Catalyst-Hackathon/actions/workflows/ci.yml)
-[![Node Version](https://img.shields.io/badge/Node.js-%3E%3D22.5.0-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
-[![Stack](https://img.shields.io/badge/Stack-React%2019%20%7C%20TypeScript%20%7C%20SQLite-0284C7?style=for-the-badge&logo=react&logoColor=white)](#)
-[![Accessibility](https://img.shields.io/badge/Accessibility-Accessibility--First%20%2B%20Web%20Speech%20API-D97706?style=for-the-badge)](#)
-[![License](https://img.shields.io/badge/License-MIT-4F46E5?style=for-the-badge)](#)
+**A collaborative care platform that helps elderly people manage their medicines and appointments, and keeps their family and caregivers informed.**
 
----
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-saathi--care--41gq.onrender.com-0D9488?style=for-the-badge&logo=render&logoColor=white)](https://saathi-care-41gq.onrender.com)
+[![CI](https://img.shields.io/github/actions/workflow/status/shivangsaxena1011/MnM-Catalyst-Hackathon/ci.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white&label=CI)](https://github.com/shivangsaxena1011/MnM-Catalyst-Hackathon/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/License-MIT-4F46E5?style=for-the-badge)](LICENSE)
 
-> 🌐 **Live Production Application:** **[https://saathi-care-41gq.onrender.com](https://saathi-care-41gq.onrender.com)**  
-> 🏆 **Engineered for:** PromptWars × Catalyst Hackathon  
-> 👤 **Author & Lead Architect:** Shivang Saxena  
-> 📦 **Repository:** [shivangsaxena1011/MnM-Catalyst-Hackathon](https://github.com/shivangsaxena1011/MnM-Catalyst-Hackathon)
+[![React](https://img.shields.io/badge/React%2019-TypeScript-0284C7?style=flat-square&logo=react&logoColor=white)](#technology-stack)
+[![Node.js](https://img.shields.io/badge/Node.js-Express-339933?style=flat-square&logo=node.js&logoColor=white)](#technology-stack)
+[![SQLite](https://img.shields.io/badge/SQLite-node%3Asqlite-003B57?style=flat-square&logo=sqlite&logoColor=white)](#technology-stack)
+[![Gemini](https://img.shields.io/badge/Google%20Gemini-AI%20Assistant-8E75B2?style=flat-square&logo=googlegemini&logoColor=white)](#technology-stack)
 
----
+**[🌐 Live Application](https://saathi-care-41gq.onrender.com)** · **[📦 GitHub Repository](https://github.com/shivangsaxena1011/MnM-Catalyst-Hackathon)** · **[✅ CI Runs](https://github.com/shivangsaxena1011/MnM-Catalyst-Hackathon/actions)**
 
-## 💡 Executive Summary & Clinical Mission
+*Built for **PromptWars × Catalyst**, a hackathon by Makers Need More (MnM) and Hack2skill. Challenge: Elderly Care & Medication Management.*
 
-**SAATHI CARE** (*Saathi* = Companion / Lifelong Partner) is an enterprise-grade, collaborative elderly healthcare ecosystem engineered to bridge the critical safety gap between **seniors**, **family members**, and **healthcare providers**.
-
-Traditional medication apps are built for tech-savvy young adults—relying on small typography, noisy push notifications, and isolated alarm clocks that fail when an elderly parent is resting, confused, or visually impaired. When an elder misses a critical cardiac, diabetic, or hypertensive medication dose, isolated alarms do nothing to notify adult children living across town.
-
-**SAATHI CARE replaces isolated alarms with an active, collaborative safety net:**
-- **Zero-Barrier Elder Experience:** High-contrast, accessibility-first palette, 40px+ readable typography, 84px single-tap touch targets, and native **Web Speech API audio narration** that clearly reads prescriptions and meal instructions aloud.
-- **Collaborative Care Circle:** Real-time synchronization between senior, family, and caregiver with role-based editing permissions (`can_edit = 1` vs read-only) and 4-digit numeric PIN authentication.
-- **Autonomous Multi-Tier Escalations:** Overdue doses automatically trigger progressive alerts—from gentle senior dashboard nudges to high-priority family alerts and automated emergency caregiver emails.
-- **Appointment Guardian:** Synchronized specialist consultation tracker with automated **24-hour advance email reminders**.
-- **Upcoming-Dose Early Warning:** Proactive 15-minute advance email notifications ensuring seniors take medications on schedule with food.
-- **Clinical AI Care Guide:** Safety-constrained medical explainer powered by Gemini with deterministic clinical fallback rules.
-- **Clinical Safety Manifesto:** Strict adherence to geriatric patient safety: **Never recommend doubling a missed dose.**
+</div>
 
 ---
 
-## 🎯 Challenge Requirement → Implementation Mapping
+## Table of Contents
 
-| Hackathon Requirement | Production Feature Implemented | Codebase & Component Location |
+1. [The Problem](#the-problem)
+2. [Our Solution](#our-solution)
+3. [Requirement Coverage](#requirement-coverage)
+4. [Key Features](#key-features)
+5. [System Architecture](#system-architecture)
+6. [Security & Privacy](#security--privacy)
+7. [Accessibility](#accessibility)
+8. [Performance](#performance)
+9. [Quality Assurance](#quality-assurance)
+10. [Technology Stack](#technology-stack)
+11. [Project Structure](#project-structure)
+12. [Evaluator Walkthrough](#evaluator-walkthrough)
+13. [Author & License](#author--license)
+
+---
+
+## The Problem
+
+Older adults often take several medicines a day, each on its own schedule. A missed or doubled dose of a blood-pressure, diabetes or heart medicine can be dangerous. Most reminder apps are built for younger users and have three problems:
+
+- **They only notify the user.** If an elderly parent misses a dose, family members living elsewhere never find out.
+- **They're hard for seniors to use.** Small text, crowded screens and complicated menus exclude people with low vision or limited tech experience.
+- **They don't share information.** The senior, family members and caregivers each keep separate notes, so nobody sees the whole care plan.
+
+## Our Solution
+
+SAATHI CARE (*Saathi* means "companion") gives the senior, their family and their caregivers **one shared care plan**, with the senior in control of their own profile:
+
+- A **Care Circle**. Each senior has a profile that family and caregivers join with a secure invite code, and each member gets view or edit permission.
+- **Proactive email reminders** for upcoming doses, missed doses and doctor appointments.
+- A **three-tier escalation system**. A gentle nudge to the senior comes first, and family and caregivers are alerted if the dose still isn't confirmed.
+- An **Elder Mode** with large text, one medicine at a time, a read-aloud voice and a one-tap emergency call.
+- **Clinical safety rules built into the system.** It never suggests doubling a missed dose, and the AI assistant never diagnoses or changes a prescription.
+
+---
+
+## Requirement Coverage
+
+| Challenge Requirement | How SAATHI CARE Delivers It | Source |
 | :--- | :--- | :--- |
-| **Secure passcode-based access** | 4–6 digit bcrypt-hashed numeric PIN with brute-force rate limiting + unique Care Circle invite codes | [`server/src/routes/auth.js`](file:///server/src/routes/auth.js), [`server/src/routes/patients.js`](file:///server/src/routes/patients.js), [`client/src/pages/AuthPage.tsx`](file:///client/src/pages/AuthPage.tsx) |
-| **Shared ecosystem: elder, caretakers, family** | Care Circle model with granular role-based privileges (`can_edit = 1` vs read-only) & multi-tenant isolation | [`server/src/middleware/auth.js`](file:///server/src/middleware/auth.js), [`client/src/pages/CareCirclePage.tsx`](file:///client/src/pages/CareCirclePage.tsx) |
-| **View/add/edit/manage medication schedules** | Prescriptions with multi-slot times (morning/night/custom HH:MM), instructions, meal timing & stock counts | [`server/src/routes/medications.js`](file:///server/src/routes/medications.js), [`client/src/pages/MedicationsPage.tsx`](file:///client/src/pages/MedicationsPage.tsx), [`AddMedicationModal.tsx`](file:///client/src/components/AddMedicationModal.tsx) |
-| **Track adherence** | Idempotent daily dose confirmation, skip logging with clinical reasons, SVG adherence ring & 7-day trend chart | [`server/src/routes/logs.js`](file:///server/src/routes/logs.js), [`client/src/pages/HistoryPage.tsx`](file:///client/src/pages/HistoryPage.tsx), [`client/src/pages/DashboardPage.tsx`](file:///client/src/pages/DashboardPage.tsx) |
-| **Upcoming doctor appointments** | Appointment Guardian tracking specialty, doctor, clinic/hospital, address, notes, and countdown timer | [`server/src/routes/appointments.js`](file:///server/src/routes/appointments.js), [`client/src/pages/AppointmentsPage.tsx`](file:///client/src/pages/AppointmentsPage.tsx), [`AddAppointmentModal.tsx`](file:///client/src/components/AddAppointmentModal.tsx) |
-| **Email reminders: missed doses, upcoming doses, appointments** | 10-minute autonomous background worker dispatching 24h appointment alerts, 15m upcoming dose warnings, and overdue escalations | [`server/src/services/escalationService.js`](file:///server/src/services/escalationService.js), [`server/src/services/emailService.js`](file:///server/src/services/emailService.js), [`server/src/index.js`](file:///server/src/index.js) |
-| **Beyond basic reminders** | Autonomous 3-tier caregiver escalation, AI explainer with strict safety guardrails, low-stock refill warning meters, Elder Mode + read-aloud, and 1-click judge demo | [`server/src/services/aiService.js`](file:///server/src/services/aiService.js), [`server/src/routes/demo.js`](file:///server/src/routes/demo.js), [`client/src/pages/ElderDashboardPage.tsx`](file:///client/src/pages/ElderDashboardPage.tsx) |
-| **Elder at the centre** | Dedicated high-contrast Elder Mode, Web Speech API audio narration, 84px single-tap buttons, senior-owned profile & member permission control | [`client/src/pages/ElderDashboardPage.tsx`](file:///client/src/pages/ElderDashboardPage.tsx), [`client/src/context/ElderModeContext.tsx`](file:///client/src/context/ElderModeContext.tsx) |
+| Secure, passcode-based access | bcrypt-hashed 4–6 digit PIN login, JWT sessions, rate-limited authentication, cryptographically random invite codes | [`routes/auth.js`](server/src/routes/auth.js) · [`routes/patients.js`](server/src/routes/patients.js) |
+| Shared ecosystem for elders, caretakers and family | Care Circle membership with `senior` / `family` / `caregiver` roles and per-member edit rights | [`middleware/auth.js`](server/src/middleware/auth.js) · [`CareCirclePage.tsx`](client/src/pages/CareCirclePage.tsx) |
+| View, add, edit and manage medication schedules | Multi-slot schedules (morning / afternoon / evening / night / custom time), meal timing, instructions, pill stock | [`routes/medications.js`](server/src/routes/medications.js) · [`MedicationsPage.tsx`](client/src/pages/MedicationsPage.tsx) |
+| Track adherence | Idempotent dose confirmation, skip reasons, 7-day adherence analytics, full activity timeline | [`routes/logs.js`](server/src/routes/logs.js) · [`HistoryPage.tsx`](client/src/pages/HistoryPage.tsx) · [`TimelinePage.tsx`](client/src/pages/TimelinePage.tsx) |
+| Monitor upcoming doctor appointments | Appointment tracking with countdowns, preparation notes and status updates | [`routes/appointments.js`](server/src/routes/appointments.js) · [`AppointmentsPage.tsx`](client/src/pages/AppointmentsPage.tsx) |
+| Email reminders: missed doses, upcoming doses, appointments | Background scheduler that runs every 10 minutes and sends deduplicated upcoming-dose, appointment and escalation emails | [`services/escalationService.js`](server/src/services/escalationService.js) · [`services/emailService.js`](server/src/services/emailService.js) |
+| Go beyond a basic reminder app | Three-tier escalation, safety-limited AI medicine explainer, refill warnings, guest demo | [`services/aiService.js`](server/src/services/aiService.js) · [`routes/escalations.js`](server/src/routes/escalations.js) |
+| Keep elders at the centre of their own decisions | Senior-owned profiles, senior-controlled member permissions, dedicated Elder Mode with voice narration | [`ElderDashboardPage.tsx`](client/src/pages/ElderDashboardPage.tsx) · [`ElderModeContext.tsx`](client/src/context/ElderModeContext.tsx) |
 
 ---
 
-## 🌟 Core Architectural Innovations
+## Key Features
 
-### 1. 👵 Dedicated Elder-Friendly Mode (Accessibility-First Design)
-- **High-Contrast, Distraction-Free Layout:** Transforms the interface to 40px+ readable typography, warm cream background (`#FFF8F1`), and single-card medication focus.
-- **84px Giant Action Target:** Seniors confirm doses with an unambiguous, oversized `✅ YES, I TOOK THIS PILL` button.
-- **Web Speech API Audio Narration:** Built-in `🔊 Read Aloud` button audibly speaks today's medicine name, dosage, and meal instructions (e.g., *"Take 1 tablet after breakfast with warm water"*) at a calm, natural cadence.
-- **1-Touch Emergency Speed-Dial:** Direct access button calling the senior's designated primary family contact or emergency services.
-- **Zero Cognitive Overload:** Eliminates complex menus, graphs, or nested settings in elder view.
+### 👥 Care Circle
+- One live care plan shared by the senior, their family and their caregivers.
+- Members join with a human-readable invite code (e.g. `SAATHI-7A8B`). Codes are generated with `crypto.randomInt` and skip look-alike characters (0/O, 1/I).
+- Seniors own their profile and decide which members can edit and which can only view.
 
-### 2. 👥 The Care Circle Model (Family & Caregiver Collaboration)
-- **Unified Patient Care Plan:** Eliminates information silos. Seniors, adult children, and visiting nurses all access the same live care plan.
-- **Instant Invite Code Pairing:** Patient profiles generate unique, human-readable codes (e.g. `SAATHI-7A8B`) generated via `crypto.randomInt` without visually ambiguous characters (`0/O`, `1/I`).
-- **Elder-Friendly 4-Digit PIN Access:** Seniors can sign in with a simple **4-digit numeric PIN** (hashed securely with `bcryptjs`) alongside standard email/password authentication.
-- **Granular Permissions:** Role-based access control enforces `can_edit = 1` for care plan modifications while providing read-only access to extended family.
+### 💊 Medication Management
+- Flexible schedules with standard slots or custom times, plus meal guidance (before, with or after food).
+- **Duplicate-dose protection.** A database-level unique constraint stops the same dose being confirmed twice.
+- **Pill inventory.** Confirming a dose updates the stock count, and the app warns when a refill is needed.
 
-### 3. 🚨 Autonomous 3-Tier Escalation Engine
-- **Autonomous Overdue Dose Detection:** A background scheduler continuously monitors scheduled medication slots against live adherence logs.
-  - **Tier 1 (15–45 min overdue):** Gentle in-app nudge on senior's dashboard.
-  - **Tier 2 (45–90 min overdue):** High-visibility warning banner and family alert.
-  - **Tier 3 (90+ min overdue):** **Emergency Caregiver Escalation** dispatched to all authorized family members and caregivers via critical priority dashboard alerts and automated emails.
-- **Strict Clinical Safety Policy:** **Never recommend doubling a missed dose!** Prominently displays safety guidance across all escalation cards and notifications: *"If a dose is missed beyond the doctor-approved window, skip it and continue on schedule."*
-
-### 4. 📅 Appointment Guardian & 24h Advance Alerts
-- **Specialist Consultation Tracking:** Manages doctor visits, clinic locations, appointment times, and doctor contact numbers.
-- **Automated 24-Hour Reminder Engine:** The background daemon scans upcoming appointments and automatically dispatches advance email reminders 24 hours prior to consultations.
-- **Deduplication Guard:** Database-level tracking (`reminder_sent = 1`) ensures exactly one reminder is sent per appointment.
-
-### 5. ⏰ Upcoming-Dose Proactive Email Alerts
-- **Proactive Schedule Notifications:** Background engine checks for medications scheduled within the next 0–30 minutes and dispatches advance email alerts to seniors and caregivers.
-- **Single-Dispatch Assurance:** SQLite table `upcoming_dose_reminders` with a `UNIQUE(patient_id, medication_id, scheduled_date, scheduled_slot)` constraint guarantees zero duplicate emails.
-
-### 6. 💊 Pill Inventory & Refill Guardian
-- **Automatic Stock Decrement:** Confirming a dose automatically deducts the pill count in real time.
-- **Low-Stock Visual Meter:** Real-time progress bar displaying remaining pills versus safety threshold.
-- **Refill Alert Trigger:** Triggers visual warnings and in-app alerts when stock drops below configured thresholds (e.g., `< 7 days supply remaining`).
-
-### 7. 🤖 AI Care Assistant (Safety-Constrained Clinical Guidance)
-- **Plain-Language Explanations:** Explains complex prescription instructions in compassionate, easy-to-understand language.
-- **Strict Guardrails:** Programmed with hard boundaries: **Never diagnoses diseases**, **never alters prescriptions or dosages**, and always includes prominent non-medical-advice disclosures.
-- **Dual Engine Architecture:** Connects to **Gemini API** when configured, paired with a deterministic **Clinical Rule Engine** covering common geriatric medications (Metformin, Amlodipine, Lisinopril, Atorvastatin, Omeprazole, etc.) ensuring 100% reliability.
-
-### 8. 🎨 Immersive 3D Visual Experience
-- **Procedural Three.js Hero Scene:** A lightweight, custom procedural 3D scene built with `@react-three/fiber` and `@react-three/drei` featuring a pulsing heart orb (`MeshDistortMaterial`), orbiting two-tone capsules, and particle sparkles.
-- **Zero Asset Bloat:** 100% procedural geometry and shaders—no heavy `.gltf` or `.obj` downloads.
-- **Dynamic Code-Splitting:** Three.js is lazily loaded via `React.lazy()` + `Suspense`, ensuring the authenticated app remains blazing fast (< 25 KB initial chunk).
-
-### 9. ⚖️ Interactive Judge Demo Mode (Honest Evaluation)
-- In accordance with hackathon evaluation standards, the application **does not silently preload fabricated patient data**.
-- Evaluators can click the prominent button **"✨ Try Live Demo — no signup"** or use the evaluation banner to instantly seed an authentic clinical case (**Ramesh Sharma, 72y**, Type 2 Diabetes & Hypertension, 3 medications, 7-day adherence history, 1 active escalation alert, and 3 care circle members), or reset to an empty state at will.
-
----
-
-## 🛠️ Technology Stack Matrix
-
-| Layer | Technologies | Architectural Highlights |
+### 📧 Proactive Email Reminders
+| Reminder | When it is sent | Duplicate guard |
 | :--- | :--- | :--- |
-| **Frontend UI** | **React 19**, **TypeScript**, **Vite** | Strict typing, instantaneous hot module replacement, zero-`any` codebase |
-| **Styling & Theme** | **Tailwind CSS v4** (`@theme`) | Warm cream palette (`#FFF8F1`), Fraunces serif + Plus Jakarta Sans typography, glassmorphism (`backdrop-blur-md`) |
-| **3D Graphics** | **Three.js**, **@react-three/fiber**, **@react-three/drei** | Procedural 3D heart orb, floating capsules, pointer parallax, lazily chunked |
-| **Animation & Feedback** | **Motion (`motion/react`)**, **Canvas-Confetti**, **FeedbackProvider** | Spring modal entrances, confetti burst on dose completion, accessible alertdialog & toasts |
-| **Backend API** | **Node.js (v24+)**, **Express.js** | RESTful modular architecture, ES Modules, Helmet CSP, centralized error handling |
-| **Database** | **SQLite (`node:sqlite` DatabaseSync)** | Zero-dependency native SQLite, atomic transactions (ephemeral on free tier; demo data seeded on demand) |
-| **Security & Auth** | **bcryptjs**, **jsonwebtoken (JWT)** | Salted hashing for passwords & 4-digit PINs, tamper-proof bearer tokens |
-| **Rate Limiting** | **express-rate-limit** | Brute-force defense on auth and passcode verification endpoints |
-| **Notifications** | **Nodemailer** + Simulated Fallback | Transactional emails for upcoming doses, appointment reminders, and escalations |
-| **AI Integration** | **Google Gemini API** + Clinical Rules | Multimodal/generative guidance with strict clinical safety fallback engine |
-| **Cloud Hosting** | **Render (Web Service)** | Production deployment at `https://saathi-care-41gq.onrender.com` |
+| Upcoming dose | Up to 30 minutes before each scheduled dose | `upcoming_dose_reminders` table with a unique constraint |
+| Appointment | Within the appointment's reminder window (default 24 hours) | `reminder_sent` flag |
+| Missed dose escalation | When a dose is unconfirmed for more than 90 minutes | One escalation per dose per day |
+
+The app reports email delivery honestly. If SMTP isn't configured, notifications still appear in the app, and their email status shows as `unconfigured`, never as sent.
+
+### 🚨 Three-Tier Escalation
+| Tier | Time since the scheduled dose | Action |
+| :--- | :--- | :--- |
+| 1 | 15–45 minutes | Gentle in-app reminder to the senior |
+| 2 | 45–90 minutes | High-priority follow-up alert |
+| 3 | More than 90 minutes | Critical alert and email to every family member and caregiver |
+
+Every escalation carries the same safety instruction: **never double a missed dose**.
+
+### 👵 Elder Mode
+- One medicine at a time, with large type and high contrast.
+- An extra-large **"Yes, I took it"** confirmation button.
+- **Read Aloud** uses the Web Speech API to speak the medicine name, dose and instructions.
+- A one-tap emergency call to the senior's chosen contact.
+- Calm by design: no 3D, no background animation and no confetti.
+
+### 🤖 AI Care Assistant
+- Explains medicines and instructions in plain, reassuring language.
+- **Hard safety limits:** it never diagnoses, never changes a dosage, refuses to suggest doubling a dose, and always shows a "not medical advice" notice.
+- Uses Google Gemini when an API key is configured. Otherwise it falls back to a built-in rule engine that covers common medicines for older adults.
+
+### 📅 Appointment Guardian
+- Tracks the doctor, specialty, hospital, address, notes and visit status.
+- Shows a countdown to the next visit on the dashboard, and the reminder engine emails the whole Care Circle before the visit.
+
+### 📊 Insights & Audit Trail
+- An adherence ring, 7-day trend charts and time-of-day breakdowns.
+- A timeline of every dose, skip, escalation and appointment event.
+
+### ✨ One-Click Guest Demo
+- **"Try Live Demo — no signup"** creates a temporary evaluator account with a realistic case: Ramesh Sharma, 72, with Type 2 diabetes and hypertension, three medicines, seven days of history, an upcoming cardiology visit and an active escalation.
+- Each demo gets its own isolated data, so evaluators never see or overwrite each other's changes.
 
 ---
 
-## 🛡️ Security, Privacy & Compliance Architecture
+## System Architecture
 
 ```
-                                  ┌──────────────────────────────┐
-                                  │       Client Browser         │
-                                  │ (React 19 + TypeScript + 3D) │
-                                  └──────────────┬───────────────┘
-                                                 │ HTTPS / TLS
-                                                 ▼
-                                  ┌──────────────────────────────┐
-                                  │      Express.js Gateway      │
-                                  │  - CORS Origin Whitelist     │
-                                  │  - Rate Limiter (Brute-Force)│
-                                  │  - Helmet Security & CSP     │
-                                  │  - JWT Bearer Authentication │
-                                  └──────────────┬───────────────┘
-                                                 │
-                   ┌─────────────────────────────┼─────────────────────────────┐
-                   ▼                             ▼                             ▼
-       ┌───────────────────────┐   ┌───────────────────────────┐   ┌───────────────────────┐
-       │   Care Circle Auth    │   │     Escalation Daemon     │   │   AI Safety Shield    │
-       │ - bcrypt Salted PINs  │   │ - 10-Min Autonomous Cycle │   │ - Gemini API Guard    │
-       │ - Role Permissions    │   │ - Tier 1/2/3 Escalations  │   │ - Never-Double-Dose   │
-       │ - Patient Isolation   │   │ - Deduplicated Reminders  │   │ - Clinical Fallback   │
-       └───────────┬───────────┘   └─────────────┬─────────────┘   └───────────┬───────────┘
-                   │                             │                             │
-                   └─────────────────────────────┼─────────────────────────────┘
-                                                 ▼
-                                  ┌──────────────────────────────┐
-                                  │  SQLite Persistent Database  │
-                                  │  (Atomic Transactions & WAL) │
-                                  └──────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│  React 19 + TypeScript SPA (Vite)                            │
+│  Pages · Elder Mode · FeedbackProvider · Lazy 3D hero        │
+└──────────────────────────────┬───────────────────────────────┘
+                               │ HTTPS · JSON · JWT Bearer
+┌──────────────────────────────▼───────────────────────────────┐
+│  Express API Gateway                                         │
+│  Helmet (CSP, HSTS) · CORS allow-list · Rate limiting        │
+│  JWT auth · Care Circle access & edit-permission middleware  │
+├──────────────┬──────────────────┬────────────────────────────┤
+│ REST routes  │ Reminder engine  │ AI Care Assistant          │
+│ auth, meds,  │ (10-min cycle)   │ Gemini + rule-based        │
+│ logs, appts, │ escalations,     │ fallback, safety intercepts│
+│ care circle  │ dose & appt mail │                            │
+└──────┬───────┴────────┬─────────┴────────────────────────────┘
+       │                │ Nodemailer (SMTP)
+┌──────▼────────────────▼──────────────────────────────────────┐
+│  SQLite (node:sqlite) · WAL mode · foreign keys · indexes    │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-1. **Passcode & Password Cryptography:** User passwords and senior 4-digit PINs are irreversibly hashed using `bcryptjs` (salt rounds = 10). Plaintext credentials never touch disk or logs.
-2. **Strict Multi-Tenant Isolation:** Every patient-specific route verifies the requester's identity against the `care_circle` membership table. Unauthorized users cannot view or modify another patient's care plan (HTTP 403 Forbidden).
-3. **Role-Based Edit Controls:** Care Circle members are assigned granular privileges (`can_edit = 1` vs read-only). Modifications to prescriptions, schedules, or appointments require edit rights.
-4. **Brute-Force Defense:** Express rate limiters protect authentication endpoints against credential stuffing and brute-force PIN guessing.
-5. **CORS & CSP Hardening:** Production API strictly validates request origins against configured domains and Render production URLs, backed by Helmet Content Security Policy headers.
-6. **XSS Protection & HTML Escaping:** All transactional email templates run through HTML entity escaping (`escapeHtml()`) to guarantee immunization against injection attacks.
-7. **Honest Notification Reporting:** The system never fabricates delivery success. When SMTP credentials are unconfigured, emails are transparently flagged as `simulated` in the notification inbox.
+**Design decisions:**
+- **No database server.** Node's built-in SQLite driver keeps deployment simple and dependency-light.
+- **Patient isolation is enforced on the server.** Every patient-scoped route checks Care Circle membership before reading or writing data.
+- **Reminders run inside the app.** A single scheduled job handles escalations, upcoming-dose emails and appointment emails, and a concurrency guard stops two scans from overlapping.
 
 ---
 
-## 📋 Comprehensive Automated Test Verification
+## Security & Privacy
 
-SAATHI CARE features a comprehensive, multi-tiered test verification suite covering unit logic, security constraints, and full end-to-end integration flows. Every commit is continuously validated via **GitHub Actions CI**.
+| Area | Implementation |
+| :--- | :--- |
+| Credentials | Passwords and PINs are hashed with bcrypt. Plain-text credentials are never stored or logged. |
+| Sessions | Signed JWT bearer tokens. A strong `JWT_SECRET` is required in production, and the server refuses to start without one. |
+| Access control | Care Circle membership is checked on every patient route. Writes require edit permission, and unauthorized requests get HTTP 403. |
+| Brute-force defence | Rate limits on login, PIN login and invite-code joining. |
+| Invite codes | Generated with a cryptographically secure random number generator. |
+| HTTP hardening | Helmet sets a Content-Security-Policy, HSTS and frame protection. CORS only allows exact, configured origins. |
+| Input validation | Length, format (date and time) and range checks on medication and appointment inputs. |
+| Output safety | All user-supplied values in email templates are HTML-escaped. |
+| Honest reporting | Email delivery status is recorded exactly as `sent`, `failed` or `unconfigured`. |
+
+---
+
+## Accessibility
+
+- **Elder Mode:** large type, high contrast, oversized touch targets and voice narration.
+- **Accessible feedback:** toasts are announced through an `aria-live` region. Confirmations use a real `role="alertdialog"`: focus starts on the safe choice, Tab stays inside the dialog, Escape cancels, and focus returns where it was afterwards.
+- **Semantic markup:** labelled controls, `aria-label`s on icon-only buttons, and status shown with both text and colour, never colour alone.
+- **Reduced motion:** heavy animation and the 3D scene are turned off when the user prefers reduced motion or is in Elder Mode.
+- **Responsive layout** for phones, tablets and desktops.
+
+---
+
+## Performance
+
+- **Batched background scans.** The reminder engine loads recent dose logs, escalations and sent reminders once per run and checks them in memory, instead of querying once per medicine per slot.
+- **Per-run caching.** Care Circle lookups and timezone formatters are cached.
+- **Code splitting.** The Three.js hero loads only on the landing page, app pages load on demand, and React, Recharts and Motion are split into separate cacheable bundles.
+- **Procedural 3D.** The 3D scene is generated in code and needs no model, texture or video files.
+- **Indexed queries** on the hottest lookups (dose logs by patient and date).
+
+---
+
+## Quality Assurance
+
+Every push to `main` is checked by **GitHub Actions** ([`ci.yml`](.github/workflows/ci.yml)), which builds the client and runs all test suites.
+
+| Suite | Tooling | Coverage | Result |
+| :--- | :--- | :--- | :--- |
+| Server unit tests | `node:test` | Schedule parsing and time resolution, AI safety intercepts, email HTML escaping, input validation, date handling | 22 passing |
+| Integration and security audit | Self-starting runner on an isolated temporary database | Auth and PIN login, patient isolation (403s), permissions, medication CRUD, duplicate-dose prevention, escalations, appointments, AI safety, guest demo | 39 passing |
+| Client tests | Vitest and Testing Library | Date and error utilities, accessible toast and confirm dialog behaviour | 15 passing |
+
+**Total: 76 automated checks, all passing.**
+
+Code standards:
+- Strict TypeScript, with no `any` in the client.
+- Shared helpers for schedule logic, dates and error handling.
+- JSDoc on service functions.
+- Consistent error responses.
+
+---
+
+## Technology Stack
+
+| Layer | Technologies |
+| :--- | :--- |
+| Frontend | React 19, TypeScript, Vite, Tailwind CSS v4 |
+| UI & motion | Motion, Three.js with React Three Fiber and Drei, Recharts, Lucide icons |
+| Backend | Node.js, Express |
+| Database | SQLite via the built-in `node:sqlite` module |
+| Auth & security | bcryptjs, jsonwebtoken, Helmet, express-rate-limit |
+| Notifications | Nodemailer (SMTP) |
+| AI | Google Gemini API with a rule-based safety fallback |
+| Testing & CI | node:test, Vitest, Testing Library, GitHub Actions |
+| Hosting | Render |
+| Built with | Google Antigravity |
+
+---
+
+## Project Structure
 
 ```
-======================================================================
-🛡️  SAATHI CARE: COMPREHENSIVE AUTOMATED VERIFICATION SUITE
-======================================================================
-
-▶ Server Unit Tests (node:test)
-  ✔ AI Care Assistant Safety Intercepts (double-dose & diagnosis refusals)
-  ✔ Client Date Helper (SQLite CURRENT_TIMESTAMP to UTC conversions)
-  ✔ Email HTML Escaping & XSS Sanitization
-  ✔ Schedule Utilities (Slot parsing & custom time resolution)
-  ✔ Input Validation Constraints (Lengths, regex, non-negative stock)
-  ℹ 22 passed, 0 failed
-
-▶ E2E Integration & Security Audit (self-starting runner on temp SQLite DB)
-  ✔ Core System & DB Health (Health check endpoint responsive)
-  ✔ Registration & Strict Role/PIN Validation (Zero hash leakage, 409 conflicts)
-  ✔ Authentication & Passcode Security (Password & 4-digit PIN authentication)
-  ✔ Patient Profile & Care Circle Pairing (Unique invite code generation)
-  ✔ Patient Isolation & Permission Enforcement (403 Forbidden checks)
-  ✔ Medication CRUD & Custom Timings (Prescription lifecycles)
-  ✔ Adherence Logging & Duplicate Prevention (Idempotent upserts)
-  ✔ Smart Care Escalation & Honest Notification (Tier 3 alerts, honest email status)
-  ✔ Appointment Guardian (Scheduling, updates, 24h reminders)
-  ✔ AI Care Assistant & Clinical Safety (Never-double-dose safety enforcement)
-  ✔ Evaluator Demo Data Seeding & Reset (1-Click guest demo & clean reset)
-  ℹ 39 passed, 0 failed
-
-▶ Client Component & Utility Tests (Vitest + Testing Library)
-  ✔ Date parser utilities (5 tests)
-  ✔ Type-safe error message extraction (4 tests)
-  ✔ Accessible FeedbackProvider (alertdialog, focus trap, escape key, focus restore) (6 tests)
-  ℹ 15 passed, 0 failed
-
-======================================================================
-🏁 TOTAL VERIFICATION METRIC: 76 PASSED, 0 FAILED (100% SUCCESS RATE)
-======================================================================
+MnM-Catalyst-Hackathon/
+├── client/                     # React + TypeScript frontend
+│   └── src/
+│       ├── api/                # Typed API client
+│       ├── components/         # Modals, navigation, banners
+│       │   ├── three/          # Lazy-loaded procedural 3D hero scene
+│       │   └── ui/             # Accessible toast & confirm-dialog system
+│       ├── context/            # Auth and Elder Mode state
+│       ├── pages/              # Landing, dashboard, elder view, medications, etc.
+│       ├── types/              # Shared TypeScript models
+│       └── utils/              # Date & error helpers (with tests)
+├── server/                     # Node.js + Express backend
+│   ├── src/
+│   │   ├── db/                 # SQLite schema, indexes and migrations
+│   │   ├── middleware/         # JWT auth, Care Circle access, rate limiting
+│   │   ├── routes/             # REST endpoints
+│   │   ├── services/           # Reminder engine, email, AI assistant
+│   │   └── utils/              # Shared schedule logic
+│   └── test/                   # Unit tests and integration runner
+├── .github/workflows/ci.yml    # Continuous integration
+├── render.yaml                 # Deployment blueprint
+└── LICENSE
 ```
 
 ---
 
-## 🔍 Hackathon Judge Evaluation Walkthrough
+## Evaluator Walkthrough
 
-Follow this step-by-step evaluation guide on the live deployment:
+All steps run on the live deployment, with nothing to install.
 
-### 1. Access the Live Platform
-Navigate to **[https://saathi-care-41gq.onrender.com](https://saathi-care-41gq.onrender.com)**.  
-*Observe:* The responsive landing page, procedural 3D hero scene with floating medication capsules, animated stats strip, 3-step care workflow, and interactive bento grid.
-
-### 2. Instant 1-Click Guest Demo (Zero Registration Required)
-- Simply click **"✨ Try Live Demo — no signup"** directly on the landing page or on the sign-in screen.
-- *Instant Result:* Zero registration forms to fill. The system instantly initializes a temporary evaluator session and preloads the authentic clinical case for **Ramesh Sharma (72y)** with Type 2 Diabetes & Hypertension, 3 prescribed medications, 7-day adherence history, an upcoming cardiologist appointment, and an active overdue dose escalation alert.
-- Alternatively, judges can sign up/sign in normally and click **"Load Judge Demo Profile"** in the evaluation banner at any time.
-
-### 3. Explore the Caregiver Dashboard
-- **Adherence Ring:** View the live SVG circular adherence progress ring.
-- **Today's Schedule:** Inspect the morning, afternoon, and night slots with pill inventory badges.
-- **7-Day Trend Chart:** Explore the Recharts area chart showing daily adherence compliance.
-- **Low-Stock Refill Alerts:** View automated pill inventory warning cards.
-- **Appointment Countdown:** Inspect the countdown widget for the upcoming Cardiologist consultation.
-
-### 4. Experience the Elder-Friendly Mode
-- Click **"👵 Switch to Elder View"** in the top navigation or sidebar.
-- *Notice:* The entire interface transforms into a warm, high-contrast, distraction-free card.
-- Click **"🔊 Read Aloud"**: Listen to the Web Speech API clearly speak today's medicine, dosage, and instructions.
-- Click **"✅ YES, I TOOK THIS PILL"**: Experience the large 84px touch target, instantaneous state confirmation, and celebratory confetti burst.
-
-### 5. Verify Appointment & Upcoming Dose Reminders
-- Navigate to **"Appointments"** in the sidebar: Inspect scheduled visits, clinic locations, and the active **"24h Email Alert Active"** indicator badge.
-- Schedule a new appointment: Observe automatic email notification dispatch and in-app confirmation.
-
-### 6. Test the AI Care Assistant & Clinical Safety Guardrails
-- Click **"AI Care Guide"** in the top navigation bar.
-- Click the suggestion chip: *"What should I do if I miss a dose?"*
-- *Verify:* The AI strictly enforces the Clinical Safety Manifesto—it clearly instructs the senior **never to double the dose**, to skip it if near the next scheduled time, and to consult their doctor.
-
-### 7. Inspect Care Circle & Notifications
-- Navigate to **"Care Circle"**: View the active members (Ramesh Sharma, Priya Sharma, Nurse Ananya) and test copying the invite pass code (`SAATHI-DEMO`).
-- Navigate to **"Notifications"**: Inspect the audit log of Tier 3 escalations, appointment reminders, and email dispatch status.
-
-### 8. Reset Demo
-- Click **"Reset Demo"** in the top banner at any time to return the platform to a pristine state.
+1. **Open the app** at **[saathi-care-41gq.onrender.com](https://saathi-care-41gq.onrender.com)**. On the free hosting plan, the first load can take a few seconds while the server wakes up.
+2. **Click "✨ Try Live Demo — no signup".** A complete patient case loads straight away.
+3. **Dashboard:** look at the adherence ring, today's dose timeline, the active escalation alert, refill warnings and the appointment countdown. Mark a dose as taken.
+4. **Elder Mode:** click **"Switch to Elder View"**. Try **Read Aloud** and the large **"Yes, I took it"** button.
+5. **AI Care Guide:** ask *"What should I do if I miss a dose?"* and check that it refuses to suggest doubling.
+6. **Appointments:** add, update or complete a visit. Each one shows that an email reminder is active.
+7. **Care Circle:** see the members, their roles and permissions, and the unique invite code.
+8. **Notifications & Timeline:** review the audit trail of escalations, reminders and their email delivery status.
 
 ---
 
-## 👥 Authors & Hackathon Attribution
+## Author & License
 
-- **Lead Engineer & Architect:** Shivang Saxena
-- **Hackathon:** PromptWars × Catalyst Hackathon
-- **Repository:** [https://github.com/shivangsaxena1011/MnM-Catalyst-Hackathon](https://github.com/shivangsaxena1011/MnM-Catalyst-Hackathon)
-- **License:** MIT License
+**Shivang Saxena**, design and development.
+Built for **PromptWars × Catalyst** by Makers Need More (MnM) × Hack2skill.
+
+Released under the [MIT License](LICENSE).
+
+> **Medical disclaimer:** SAATHI CARE supports medication routines and care coordination. It does not provide medical advice, diagnosis or treatment. Always follow the guidance of a qualified doctor or pharmacist.
